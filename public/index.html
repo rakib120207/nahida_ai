@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#1a1a1a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Nahida AI"/>
+<meta name="description" content="কুরআন ও সহিহ হাদিসের আলোকে ইসলামিক প্রশ্নোত্তর"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
+<title>Nahida AI — ইসলামিক প্রশ্নোত্তর</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--fg:#111;--fg2:#555;--fg3:#999;
+  --border:#e4e4e4;--border2:#ccc;
+  --surface:#fafafa;--surface2:#f3f3f3;
+  --accent:#1a1a1a;--accent-light:#f0f0f0;
+  --radius:12px;--fs:16px;
+  --font-bn:'Noto Serif Bengali',serif;
+  --font-en:'Crimson Pro',Georgia,serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--font-bn);font-size:var(--fs);color:var(--fg);display:flex;flex-direction:column}
+
+/* ── Topbar ── */
+#topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;z-index:20;
+  padding-top:max(12px,env(safe-area-inset-top));
+}
+.tb-btn{
+  background:none;border:1px solid var(--border2);border-radius:9px;
+  padding:7px 12px;cursor:pointer;font-size:14px;color:var(--fg);
+  display:flex;align-items:center;gap:5px;transition:background .15s;
+  font-family:var(--font-bn);white-space:nowrap;
+}
+.tb-btn:hover{background:var(--accent-light)}
+.tb-btn svg{flex-shrink:0}
+.brand{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  gap:8px;cursor:pointer;user-select:none;
+}
+.brand-logo{width:34px;height:34px;flex-shrink:0}
+.brand-text h1{font-size:17px;font-weight:500;color:var(--fg);letter-spacing:0.3px;font-family:var(--font-en)}
+.brand-text p{font-size:11px;color:var(--fg3);font-family:var(--font-en);font-style:italic;margin-top:1px}
+
+/* ── Chat area ── */
+#chat{
+  flex:1;overflow-y:auto;padding:20px 16px 12px;
+  display:flex;flex-direction:column;gap:18px;
+  -webkit-overflow-scrolling:touch;
+}
+#chat::-webkit-scrollbar{width:4px}
+#chat::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* Welcome */
+#welcome{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;margin:auto;
+  padding:24px 20px;gap:14px;max-width:380px;
+}
+#welcome .w-logo{width:72px;height:72px}
+#welcome h2{font-size:22px;font-weight:500;color:var(--fg);font-family:var(--font-en)}
+#welcome .w-arabic{font-size:20px;color:var(--fg2);direction:rtl;letter-spacing:1px}
+#welcome p{font-size:14px;color:var(--fg3);line-height:1.8}
+#welcome .w-pills{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:4px}
+.w-pill{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:6px 13px;font-size:13px;color:var(--fg2);
+  cursor:pointer;transition:all .15s;
+}
+.w-pill:hover{background:var(--accent-light);border-color:var(--border2);color:var(--fg)}
+
+/* Messages */
+.msg{display:flex;flex-direction:column;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-items:flex-end}
+.msg.bot{align-items:flex-start;width:100%}
+.msg.user .bubble{
+  background:var(--accent);color:#fff;padding:11px 15px;
+  border-radius:18px 18px 4px 18px;font-size:var(--fs);
+  line-height:1.6;max-width:85%;word-break:break-word;
+  font-family:var(--font-bn);
+}
+.bot-header{
+  display:flex;align-items:center;gap:6px;margin-bottom:6px;
+  font-size:12px;color:var(--fg3);font-family:var(--font-en);
+}
+.bot-header svg{width:14px;height:14px;opacity:.5}
+.bot-header .thinking-badge{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:1px 7px;font-size:11px;color:var(--fg3);
+}
+.msg.bot .bubble{
+  background:var(--surface);border:1px solid var(--border);
+  padding:15px 17px;border-radius:4px 18px 18px 18px;
+  font-size:var(--fs);line-height:1.9;word-break:break-word;
+  font-family:var(--font-bn);color:var(--fg);
+  white-space:pre-wrap;max-width:100%;
+}
+.msg.bot .bubble .bismillah{
+  display:block;text-align:center;font-size:19px;
+  color:var(--fg2);margin-bottom:10px;direction:rtl;
+  border-bottom:1px solid var(--border);padding-bottom:10px;
+}
+
+/* Typing indicator */
+.typing{display:flex;gap:5px;padding:14px 17px;align-items:center}
+.typing span{
+  width:7px;height:7px;background:var(--border2);
+  border-radius:50%;animation:pulse 1.2s infinite;
+}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{transform:scale(.75);opacity:.5}40%{transform:scale(1);opacity:1}}
+.thinking-label{font-size:12px;color:var(--fg3);margin-left:4px;font-family:var(--font-en)}
+
+/* ── Input bar ── */
+#inputbar{
+  padding:12px 16px;border-top:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
+  padding-bottom:max(12px,env(safe-area-inset-bottom));
+}
+.input-row{display:flex;gap:9px;align-items:flex-end}
+#userinput{
+  flex:1;border:1.5px solid var(--border2);border-radius:14px;
+  padding:11px 15px;font-size:var(--fs);font-family:var(--font-bn);
+  color:var(--fg);background:var(--bg);resize:none;outline:none;
+  min-height:46px;max-height:130px;line-height:1.5;
+  transition:border .2s;
+}
+#userinput:focus{border-color:var(--accent)}
+#userinput::placeholder{color:var(--fg3)}
+#sendbtn{
+  background:var(--accent);color:#fff;border:none;border-radius:12px;
+  width:46px;height:46px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;
+}
+#sendbtn:hover{background:#333}
+#sendbtn:active{transform:scale(.95)}
+#sendbtn:disabled{background:var(--border2);cursor:not-allowed}
+.input-hint{font-size:11px;color:var(--fg3);margin-top:6px;text-align:center;font-family:var(--font-en)}
+
+/* ── Overlays ── */
+#overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);
+  z-index:40;
+}
+#overlay.show{display:block}
+
+/* ── History Panel ── */
+#histpanel{
+  position:fixed;top:0;left:0;bottom:0;width:min(320px,85vw);
+  background:var(--bg);border-right:1px solid var(--border);z-index:50;
+  transform:translateX(-100%);transition:transform .3s ease;
+  display:flex;flex-direction:column;
+}
+#histpanel.open{transform:translateX(0)}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px;border-bottom:1px solid var(--border);
+  padding-top:max(16px,env(safe-area-inset-top));
+}
+.panel-head h3{font-size:16px;font-weight:500;color:var(--fg)}
+.icon-btn{
+  background:none;border:none;cursor:pointer;padding:6px;
+  color:var(--fg3);border-radius:8px;transition:background .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{background:var(--accent-light);color:var(--fg)}
+#histlist{flex:1;overflow-y:auto;padding:10px}
+.hist-empty{text-align:center;color:var(--fg3);font-size:13px;margin-top:40px;font-family:var(--font-en)}
+.hist-item{
+  padding:11px 13px;border-radius:10px;cursor:pointer;
+  transition:background .15s;margin-bottom:6px;border:1px solid transparent;
+}
+.hist-item:hover{background:var(--surface2);border-color:var(--border)}
+.hist-q{font-size:13px;font-weight:500;color:var(--fg);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.hist-a{font-size:12px;color:var(--fg3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.hist-clear{
+  width:100%;background:none;border:1px solid var(--border);
+  border-radius:9px;padding:9px;font-size:13px;color:var(--fg3);
+  cursor:pointer;transition:all .15s;font-family:var(--font-bn);
+}
+.hist-clear:hover{border-color:var(--border2);color:var(--fg);background:var(--surface2)}
+
+/* ── Settings Panel ── */
+#settingspanel{
+  position:fixed;top:0;right:0;bottom:0;width:min(360px,90vw);
+  background:var(--bg);border-left:1px solid var(--border);z-index:50;
+  transform:translateX(100%);transition:transform .3s ease;
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+#settingspanel.open{transform:translateX(0)}
+.settings-body{padding:20px 16px;display:flex;flex-direction:column;gap:24px}
+.setting-group h4{font-size:13px;font-weight:500;color:var(--fg3);
+  letter-spacing:.5px;margin-bottom:12px;font-family:var(--font-en);text-transform:uppercase}
+.setting-row{margin-bottom:14px}
+.setting-row label{display:block;font-size:14px;color:var(--fg);margin-bottom:6px}
+.setting-row input[type=text],
+.setting-row input[type=password],
+.setting-row select{
+  width:100%;border:1px solid var(--border2);border-radius:10px;
+  padding:10px 13px;font-size:14px;font-family:var(--font-bn);color:var(--fg);
+  background:var(--bg);outline:none;transition:border .2s;
+}
+.setting-row input:focus,.setting-row select:focus{border-color:var(--accent)}
+.setting-row .hint{font-size:12px;color:var(--fg3);margin-top:5px;line-height:1.5;font-family:var(--font-en)}
+.setting-row .hint a{color:var(--fg);text-decoration:underline}
+.save-btn{
+  width:100%;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;padding:12px;font-size:15px;cursor:pointer;
+  transition:background .15s;font-family:var(--font-bn);
+}
+.save-btn:hover{background:#333}
+.font-btns{display:flex;gap:8px}
+.font-btn{
+  flex:1;border:1px solid var(--border2);border-radius:9px;
+  padding:8px;cursor:pointer;background:var(--bg);
+  font-family:var(--font-bn);color:var(--fg);transition:all .15s;text-align:center;
+}
+.font-btn.active,.font-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.about-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px;font-size:13px;line-height:1.8;
+  color:var(--fg2);font-family:var(--font-en);
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:4px 10px;font-size:12px;color:var(--fg3);
+  font-family:var(--font-en);
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4caf50}
+.msg-badge{
+  display:inline-block;background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;
+  padding:2px 8px;font-size:11px;color:var(--fg3);margin-left:6px;
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div id="topbar">
+  <button class="tb-btn" onclick="openHist()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    ইতিহাস
+  </button>
+  <div class="brand" onclick="resetChat()">
+    <svg class="brand-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- outer ring -->
+      <circle cx="40" cy="40" r="35" stroke="#1a1a1a" stroke-width="1.8"/>
+      <!-- inner ring -->
+      <circle cx="40" cy="40" r="29" stroke="#1a1a1a" stroke-width="0.9"/>
+      <!-- crescent -->
+      <circle cx="37" cy="40" r="17" fill="#1a1a1a"/>
+      <circle cx="43.5" cy="35.5" r="13" fill="#ffffff"/>
+      <!-- 5-pt star -->
+      <g transform="translate(57,22)">
+        <polygon points="0,-7 1.8,-2.5 6.7,-2.5 2.9,0.9 4.3,5.9 0,3.2 -4.3,5.9 -2.9,0.9 -6.7,-2.5 -1.8,-2.5" fill="#1a1a1a"/>
+      </g>
+      <!-- decorative dots -->
+      <circle cx="40" cy="7" r="1.5" fill="#1a1a1a" opacity=".4"/>
+      <circle cx="40" cy="73" r="1.5" fill="#1a1a1a" opacity=".4"/>
+      <circle cx="7" cy="40" r="1.5" fill="#1a1a1a" opacity=".4"/>
+      <circle cx="73" cy="40" r="1.5" fill="#1a1a1a" opacity=".4"/>
+    </svg>
+    <div class="brand-text">
+      <h1>Nahida AI</h1>
+      <p>ইসলামিক প্রশ্নোত্তর</p>
+    </div>
+  </div>
+  <button class="tb-btn" onclick="openSettings()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    সেটিং
+  </button>
+</div>
+
+<!-- Chat -->
+<div id="chat">
+  <div id="welcome">
+    <svg class="w-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="35" stroke="#1a1a1a" stroke-width="1.8"/>
+      <circle cx="40" cy="40" r="29" stroke="#1a1a1a" stroke-width="0.9"/>
+      <circle cx="37" cy="40" r="17" fill="#1a1a1a"/>
+      <circle cx="43.5" cy="35.5" r="13" fill="#ffffff"/>
+      <g transform="translate(57,22)"><polygon points="0,-7 1.8,-2.5 6.7,-2.5 2.9,0.9 4.3,5.9 0,3.2 -4.3,5.9 -2.9,0.9 -6.7,-2.5 -1.8,-2.5" fill="#1a1a1a"/></g>
+    </svg>
+    <div class="w-arabic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    <h2>Nahida AI-তে স্বাগতম</h2>
+    <p>কুরআন, সহিহ বুখারী ও সহিহ মুসলিমের আলোকে<br/>আপনার ইসলামিক প্রশ্নের উত্তর পাবেন।<br/><br/>বাংলা বা <strong>ইংরেজি অক্ষরে বাংলা</strong> (Banglish) লিখলেও বুঝবে।</p>
+    <div class="w-pills">
+      <span class="w-pill" onclick="quickQ('Namaz ki? Koto waqt namaz pora jay?')">নামায কতবার?</span>
+      <span class="w-pill" onclick="quickQ('Roja rakhar niyom ki?')">রোজার নিয়ম</span>
+      <span class="w-pill" onclick="quickQ('Quran e ki bola ache tawbah somporke?')">তাওবাহ</span>
+      <span class="w-pill" onclick="quickQ('Zakat ki? Kake dite hobe?')">যাকাত</span>
+      <span class="w-pill" onclick="quickQ('Jannat er kotha Quran e kothay ache?')">জান্নাতের বিবরণ</span>
+      <span class="w-pill" onclick="quickQ('Hajj er farj ki ki?')">হজ্জের ফরজ</span>
+    </div>
+  </div>
+</div>
+
+<!-- Input bar -->
+<div id="inputbar">
+  <div class="input-row">
+    <textarea id="userinput" placeholder="প্রশ্ন লিখুন... (যেমন: Namaz ki? বা নামায কি?)" rows="1"
+      oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    <button id="sendbtn" onclick="sendMsg()" aria-label="পাঠান">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <p class="input-hint">ইংরেজি অক্ষরে বাংলা লিখলেও Nahida AI বুঝবে</p>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" onclick="closePanels()"></div>
+
+<!-- History Panel -->
+<div id="histpanel">
+  <div class="panel-head">
+    <h3>প্রশ্নের ইতিহাস</h3>
+    <button class="icon-btn" onclick="closePanels()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div id="histlist"><p class="hist-empty">এখনো কোনো প্রশ্ন নেই।</p></div>
+  <div class="hist-footer">
+    <button class="hist-clear" onclick="clearHist()">সব ইতিহাস মুছুন</button>
+  </div>
+</div>
+
+<!-- Settings Panel -->
+<div id="settingspanel">
+  <div class="panel-head">
+    <h3>সেটিং</h3>
+    <button class="icon-btn" onclick="closePanels()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="settings-body">
+
+    <div class="setting-group">
+      <h4>সংযোগ</h4>
+      <div id="conn-status" class="status-pill">
+        <div class="status-dot"></div> সার্ভার সংযুক্ত
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h4>API Key (ঐচ্ছিক)</h4>
+      <div class="setting-row">
+        <label>Groq API Key</label>
+        <input type="password" id="s-apikey" placeholder="gsk_xxxx (খালি রাখলে সার্ভারের key ব্যবহার হবে)"/>
+        <p class="hint">
+          <a href="https://console.groq.com" target="_blank">console.groq.com</a> থেকে বিনামূল্যে নিন।<br/>
+          ব্যক্তিগত key থাকলে এখানে দিন, না থাকলে খালি রাখুন।
+        </p>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h4>লেখার আকার</h4>
+      <div class="font-btns">
+        <button class="font-btn" data-size="14" onclick="setFont(14,this)">ছোট</button>
+        <button class="font-btn active" data-size="16" onclick="setFont(16,this)">মাঝারি</button>
+        <button class="font-btn" data-size="18" onclick="setFont(18,this)">বড়</button>
+        <button class="font-btn" data-size="20" onclick="setFont(20,this)">বড়তর</button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h4>ইতিহাস</h4>
+      <div class="setting-row">
+        <label id="hist-count-label">মোট প্রশ্ন: ০টি</label>
+        <button class="hist-clear" onclick="clearHist();renderHist()" style="margin-top:8px">
+          সব ইতিহাস মুছুন
+        </button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h4>অ্যাপ সম্পর্কে</h4>
+      <div class="about-box">
+        <strong>Nahida AI</strong> — একটি ব্যক্তিগত ইসলামিক প্রশ্নোত্তর সহকারী।<br/><br/>
+        📖 কুরআনুল কারিম (সকল ১১৪ সূরা)<br/>
+        📚 সহিহ বুখারী (৯৭ কিতাব)<br/>
+        📚 সহিহ মুসলিম (৫৬ কিতাব)<br/>
+        📚 সুনানে আবু দাউদ, তিরমিযী, ইবনে মাজাহ<br/>
+        🧠 দ্বি-স্তরীয় চিন্তা পদ্ধতি<br/><br/>
+        <em>Made with love for family. ❤️</em>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <button class="save-btn" onclick="saveSettings()">সেটিং সংরক্ষণ করুন</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let history = JSON.parse(localStorage.getItem('nahida_history') || '[]');
+let isLoading = false;
+let fontSize = parseInt(localStorage.getItem('nahida_fs') || '16');
+let customApiKey = localStorage.getItem('nahida_key') || '';
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  applyFont(fontSize);
+  const btn = document.querySelector(`.font-btn[data-size="${fontSize}"]`);
+  if (btn) { document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  if (customApiKey) document.getElementById('s-apikey').value = customApiKey;
+  renderHist();
+  updateHistCount();
+  registerSW();
+});
+
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  }
+}
+
+// ── Font ───────────────────────────────────────────────────────────────────
+function applyFont(size) {
+  document.documentElement.style.setProperty('--fs', size + 'px');
+}
+function setFont(size, btn) {
+  fontSize = size;
+  applyFont(size);
+  document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Settings ───────────────────────────────────────────────────────────────
+function openSettings() {
+  updateHistCount();
+  document.getElementById('settingspanel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function saveSettings() {
+  const k = document.getElementById('s-apikey').value.trim();
+  customApiKey = k;
+  if (k) localStorage.setItem('nahida_key', k); else localStorage.removeItem('nahida_key');
+  localStorage.setItem('nahida_fs', fontSize);
+  closePanels();
+  showToast('সেটিং সংরক্ষিত হয়েছে ✓');
+}
+
+// ── History ────────────────────────────────────────────────────────────────
+function openHist() {
+  renderHist();
+  document.getElementById('histpanel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closePanels() {
+  document.getElementById('histpanel').classList.remove('open');
+  document.getElementById('settingspanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function clearHist() {
+  history = [];
+  localStorage.removeItem('nahida_history');
+  renderHist();
+  updateHistCount();
+}
+function saveHist() {
+  localStorage.setItem('nahida_history', JSON.stringify(history.slice(-50)));
+}
+function updateHistCount() {
+  const el = document.getElementById('hist-count-label');
+  if (el) el.textContent = `মোট প্রশ্ন: ${history.length}টি`;
+}
+function renderHist() {
+  const list = document.getElementById('histlist');
+  if (!history.length) { list.innerHTML = '<p class="hist-empty">এখনো কোনো প্রশ্ন নেই।</p>'; return; }
+  list.innerHTML = history.slice().reverse().map((item, ri) => {
+    const i = history.length - 1 - ri;
+    return `<div class="hist-item" onclick="loadHist(${i})">
+      <div class="hist-q">${esc(item.q)}</div>
+      <div class="hist-a">${esc(item.a.replace(/بِسْمِ.*?(\n|$)/,'').trim().substring(0,70))}…</div>
+    </div>`;
+  }).join('');
+}
+function loadHist(idx) {
+  const item = history[idx];
+  const chat = document.getElementById('chat');
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+  chat.innerHTML = '';
+  appendMsg('user', item.q);
+  appendMsg('bot', item.a);
+  closePanels();
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) { e.preventDefault(); sendMsg(); }
+}
+
+function quickQ(q) {
+  document.getElementById('userinput').value = q;
+  sendMsg();
+}
+function resetChat() {
+  document.getElementById('chat').innerHTML = `<div id="welcome">
+    <svg class="w-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="35" stroke="#1a1a1a" stroke-width="1.8"/>
+      <circle cx="40" cy="40" r="29" stroke="#1a1a1a" stroke-width="0.9"/>
+      <circle cx="37" cy="40" r="17" fill="#1a1a1a"/>
+      <circle cx="43.5" cy="35.5" r="13" fill="#ffffff"/>
+      <g transform="translate(57,22)"><polygon points="0,-7 1.8,-2.5 6.7,-2.5 2.9,0.9 4.3,5.9 0,3.2 -4.3,5.9 -2.9,0.9 -6.7,-2.5 -1.8,-2.5" fill="#1a1a1a"/></g>
+    </svg>
+    <div class="w-arabic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    <h2>Nahida AI-তে স্বাগতম</h2>
+    <p>কুরআন, সহিহ বুখারী ও সহিহ মুসলিমের আলোকে<br/>আপনার ইসলামিক প্রশ্নের উত্তর পাবেন।</p>
+    <div class="w-pills">
+      <span class="w-pill" onclick="quickQ('Namaz ki? Koto waqt namaz pora jay?')">নামায কতবার?</span>
+      <span class="w-pill" onclick="quickQ('Roja rakhar niyom ki?')">রোজার নিয়ম</span>
+      <span class="w-pill" onclick="quickQ('Quran e ki bola ache tawbah somporke?')">তাওবাহ</span>
+      <span class="w-pill" onclick="quickQ('Zakat ki? Kake dite hobe?')">যাকাত</span>
+    </div>
+  </div>`;
+}
+
+function appendMsg(role, text, thinkingTime) {
+  const chat = document.getElementById('chat');
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  if (role === 'user') {
+    div.innerHTML = `<div class="bubble">${esc(text)}</div>`;
+  } else {
+    // Format bismillah separately
+    const formatted = esc(text).replace(
+      /بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ/g,
+      '<span class="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>'
+    );
+    const badge = thinkingTime ? `<span class="msg-badge">⏱ ${thinkingTime}s</span>` : '';
+    div.innerHTML = `
+      <div class="bot-header">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Nahida AI ${badge}
+      </div>
+      <div class="bubble">${formatted}</div>`;
+  }
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const chat = document.getElementById('chat');
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="bot-header">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Nahida AI
+    </div>
+    <div class="bubble">
+      <div class="typing">
+        <span></span><span></span><span></span>
+        <span class="thinking-label" id="think-label">প্রশ্ন বিশ্লেষণ করছে…</span>
+      </div>
+    </div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+
+  // Update thinking label after 1.5s
+  setTimeout(() => {
+    const lbl = document.getElementById('think-label');
+    if (lbl) lbl.textContent = 'উৎস খুঁজছে…';
+  }, 1500);
+  setTimeout(() => {
+    const lbl = document.getElementById('think-label');
+    if (lbl) lbl.textContent = 'উত্তর তৈরি করছে…';
+  }, 3000);
+}
+
+async function sendMsg() {
+  if (isLoading) return;
+  const input = document.getElementById('userinput');
+  const q = input.value.trim();
+  if (!q) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  appendMsg('user', q);
+  showTyping();
+  isLoading = true;
+  document.getElementById('sendbtn').disabled = true;
+
+  const t0 = Date.now();
+
+  try {
+    const body = {
+      question: q,
+      conversationHistory: history.slice(-6)
+    };
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (customApiKey) headers['x-groq-key'] = customApiKey;
+
+    
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'সার্ভার সমস্যা');
+
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    document.getElementById('typing-indicator')?.remove();
+    appendMsg('bot', data.answer, elapsed);
+
+    history.push({ q, a: data.answer, ts: Date.now() });
+    saveHist();
+    renderHist();
+    updateHistCount();
+
+  } catch (err) {
+    document.getElementById('typing-indicator')?.remove();
+    appendMsg('bot', `❌ সমস্যা হয়েছে:\n${err.message}\n\nসেটিং থেকে API Key চেক করুন অথবা পুনরায় চেষ্টা করুন।`);
+  }
+
+  isLoading = false;
+  document.getElementById('sendbtn').disabled = false;
+  document.getElementById('userinput').focus();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    background:#1a1a1a;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;
+    z-index:999;opacity:0;transition:opacity .3s;font-family:var(--font-bn);white-space:nowrap`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.style.opacity = '1');
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+// ── PWA Install prompt ─────────────────────────────────────────────────────
+let deferredInstall;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  setTimeout(() => {
+    if (!localStorage.getItem('nahida_installed')) showInstallBanner();
+  }, 3000);
+});
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem('nahida_installed', '1');
+  hideInstallBanner();
+});
+function showInstallBanner() {
+  const b = document.createElement('div');
+  b.id = 'install-banner';
+  b.style.cssText = `position:fixed;bottom:70px;left:50%;transform:translateX(-50%);
+    background:#1a1a1a;color:#fff;border-radius:14px;padding:13px 18px;
+    display:flex;align-items:center;gap:12px;z-index:998;box-shadow:0 4px 20px rgba(0,0,0,.2);
+    font-size:14px;font-family:var(--font-bn);white-space:nowrap`;
+  b.innerHTML = `<span>📲 হোম স্ক্রিনে যোগ করুন</span>
+    <button onclick="doInstall()" style="background:#fff;color:#111;border:none;border-radius:8px;
+      padding:6px 12px;cursor:pointer;font-size:13px;font-family:var(--font-bn);">যোগ করুন</button>
+    <button onclick="hideInstallBanner()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;">✕</button>`;
+  document.body.appendChild(b);
+}
+function hideInstallBanner() { document.getElementById('install-banner')?.remove(); }
+function doInstall() {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(() => { deferredInstall = null; hideInstallBanner(); });
+}
+</script>
+</body>
+</html>

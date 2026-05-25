@@ -1,0 +1,35 @@
+{
+  "name": "Nahida AI — ইসলামিক প্রশ্নোত্তর",
+  "short_name": "Nahida AI",
+  "description": "কুরআন ও সহিহ হাদিসের আলোকে ইসলামিক প্রশ্নের উত্তর",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait-primary",
+  "categories": ["education", "lifestyle"],
+  "lang": "bn",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "নতুন প্রশ্ন",
+      "short_name": "প্রশ্ন",
+      "description": "নতুন ইসলামিক প্রশ্ন করুন",
+      "url": "/"
+    }
+  ]
+}
