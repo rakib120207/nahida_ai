@@ -2,6 +2,7 @@
   "name": "nahida-ai",
   "version": "1.0.0",
   "description": "Nahida AI — Islamic Q&A powered by Quran & Authentic Hadith",
+  "type": "module",
   "private": true,
   "engines": { "node": ">=18" },
   "scripts": {
