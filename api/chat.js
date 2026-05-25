@@ -18,21 +18,42 @@ async function groqCall(apiKey, messages, model, maxTokens, temperature = 0.2) {
 }
 
 export default async function handler(req, res) {
+  // ── CORS and OPTIONS ──────────────────────────────────────────────────────
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = req.headers['x-groq-key'] || process.env.GROQ_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY not set. Please add it in Settings or configure it in Vercel environment variables.' });
+  // ── Protect everything inside a try-catch ─────────────────────────────────
+  try {
+    // Validate HTTP method
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-  const { question, conversationHistory = [] } = req.body;
-  if (!question?.trim()) return res.status(400).json({ error: 'Question is required.' });
+    // Check API key
+    const apiKey = req.headers['x-groq-key'] || process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({
+        error: 'GROQ_API_KEY not set. Please add it in Settings or configure it in Vercel environment variables.'
+      });
+    }
 
-  // ── LAYER 1: Fast question analysis (llama-3.1-8b-instant) ────────────────
-  // Detects language, Banglish, topics, and which Islamic sources to prioritize.
-  const analysisPrompt = `You are an Islamic question analyzer. Given a user question, output ONLY valid JSON (no markdown, no explanation):
+    // Parse the body safely
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
+
+    const { question, conversationHistory = [] } = body || {};
+    if (!question?.trim()) {
+      return res.status(400).json({ error: 'Question is required.' });
+    }
+
+    // ── LAYER 1: Fast question analysis (llama-3.1-8b-instant) ────────────────
+    const analysisPrompt = `You are an Islamic question analyzer. Given a user question, output ONLY valid JSON (no markdown, no explanation):
 
 {
   "respondIn": "bangla" or "english",
@@ -52,38 +73,38 @@ DETECTION RULES:
 
 User question: "${question.replace(/"/g, '\\"')}"`;
 
-  let analysis = {
-    respondIn: 'bangla',
-    isBanglish: true,
-    questionMeaning: question,
-    topics: ['general Islamic question'],
-    primarySources: ['quran', 'bukhari', 'muslim'],
-    complexity: 'moderate',
-    needsFiqh: false,
-    searchAngles: ['Islamic ruling', 'Quranic guidance']
-  };
+    let analysis = {
+      respondIn: 'bangla',
+      isBanglish: true,
+      questionMeaning: question,
+      topics: ['general Islamic question'],
+      primarySources: ['quran', 'bukhari', 'muslim'],
+      complexity: 'moderate',
+      needsFiqh: false,
+      searchAngles: ['Islamic ruling', 'Quranic guidance']
+    };
 
-  try {
-    const raw = await groqCall(
-      apiKey,
-      [{ role: 'user', content: analysisPrompt }],
-      'llama-3.1-8b-instant',
-      350,
-      0.1
-    );
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
-    analysis = { ...analysis, ...parsed };
-  } catch (_) {
-    // Use defaults — don't block the answer
-  }
+    try {
+      const raw = await groqCall(
+        apiKey,
+        [{ role: 'user', content: analysisPrompt }],
+        'llama-3.1-8b-instant',
+        350,
+        0.1
+      );
+      const cleaned = raw.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      analysis = { ...analysis, ...parsed };
+    } catch (_) {
+      // Use defaults — don't block the answer
+    }
 
-  // ── LAYER 2: Scholarly deep answer (llama-3.3-70b-versatile) ──────────────
-  const langInstruction = analysis.respondIn === 'bangla'
-    ? `IMPORTANT: Respond ENTIRELY in Bangla script (বাংলা). The user typed in English letters (Banglish) but means Bangla — understand it fully and respond in pure, fluent Bangla. Never use English words in your answer except for Arabic/Islamic terms.`
-    : `Respond in clear, scholarly English.`;
+    // ── LAYER 2: Scholarly deep answer (llama-3.3-70b-versatile) ──────────────
+    const langInstruction = analysis.respondIn === 'bangla'
+      ? `IMPORTANT: Respond ENTIRELY in Bangla script (বাংলা). The user typed in English letters (Banglish) but means Bangla — understand it fully and respond in pure, fluent Bangla. Never use English words in your answer except for Arabic/Islamic terms.`
+      : `Respond in clear, scholarly English.`;
 
-  const scholarSystem = `You are Nahida AI — a deeply knowledgeable Islamic scholar AI with mastery over:
+    const scholarSystem = `You are Nahida AI — a deeply knowledgeable Islamic scholar AI with mastery over:
 • The Holy Quran — all 114 Surahs, Arabic text, meaning, and context
 • Sahih Bukhari — all 97 books and 7,563 hadiths  
 • Sahih Muslim — all 56 books and ~7,500 hadiths
@@ -116,14 +137,12 @@ RESPONSE STRUCTURE:
 Question context identified: ${analysis.topics?.join(', ')} | Sources: ${analysis.primarySources?.join(', ')}
 Original meaning: ${analysis.questionMeaning}`;
 
-  const history = conversationHistory.slice(-6).flatMap(h => [
-    { role: 'user', content: h.q },
-    { role: 'assistant', content: h.a }
-  ]);
+    const history = conversationHistory.slice(-6).flatMap(h => [
+      { role: 'user', content: h.q },
+      { role: 'assistant', content: h.a }
+    ]);
 
-  let answer;
-  try {
-    answer = await groqCall(
+    const answer = await groqCall(
       apiKey,
       [
         { role: 'system', content: scholarSystem },
@@ -134,9 +153,14 @@ Original meaning: ${analysis.questionMeaning}`;
       1600,
       0.2
     );
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
 
-  return res.json({ answer, analysis });
+    return res.json({ answer, analysis });
+
+  } catch (err) {
+    // Catch any remaining error — always return JSON
+    console.error('Handler error:', err);
+    return res.status(500).json({
+      error: err.message || 'Internal server error'
+    });
+  }
 }
