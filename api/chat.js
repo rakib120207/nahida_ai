@@ -1,5 +1,5 @@
-// Nahida AI — Islamic Q&A API (CommonJS, Vercel Serverless)
-// Two-layer thinking: Layer 1 = fast analysis, Layer 2 = deep scholarly answer
+// Nahida AI — API v2 (CommonJS, Vercel Serverless)
+// 3-layer: analysis → deep scholarly answer → session title generation
 
 const GROQ_BASE = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -10,136 +10,119 @@ async function groqCall(apiKey, messages, model, maxTokens, temp) {
       "Content-Type": "application/json",
       "Authorization": "Bearer " + apiKey
     },
-    body: JSON.stringify({
-      model: model,
-      messages: messages,
-      max_tokens: maxTokens,
-      temperature: temp
-    })
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: temp })
   });
-
   if (!resp.ok) {
-    let errMsg = "Groq API error " + resp.status;
-    try {
-      const e = await resp.json();
-      if (e && e.error && e.error.message) errMsg = e.error.message;
-    } catch (_) {}
-    throw new Error(errMsg);
+    let msg = "Groq API error " + resp.status;
+    try { const e = await resp.json(); if (e.error && e.error.message) msg = e.error.message; } catch(_){}
+    throw new Error(msg);
   }
-
   const d = await resp.json();
   return d.choices[0].message.content;
 }
 
 module.exports = async function handler(req, res) {
-  // CORS preflight
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-groq-key");
-
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // API key: client header takes priority, fallback to env
   const apiKey = (req.headers && req.headers["x-groq-key"]) || process.env.GROQ_API_KEY || "";
-  if (!apiKey || apiKey.trim() === "") {
-    return res.status(500).json({
-      error: "API key missing. Set GROQ_API_KEY in Vercel → Settings → Environment Variables, then Redeploy."
-    });
-  }
+  if (!apiKey.trim()) return res.status(500).json({ error: "GROQ_API_KEY not configured in Vercel environment variables." });
 
   let body = req.body;
-  // Vercel sometimes gives raw string for body
-  if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch (_) { body = {}; }
+  if (typeof body === "string") { try { body = JSON.parse(body); } catch(_){ body = {}; } }
+
+  const question    = body && body.question ? String(body.question).trim() : "";
+  const sessionMsgs = (body && Array.isArray(body.sessionMessages)) ? body.sessionMessages : [];
+  const genTitle    = body && body.genTitle === true;
+
+  if (!question && !genTitle) return res.status(400).json({ error: "Question is required" });
+
+  // ── TITLE GENERATION MODE ───────────────────────────────────────────────
+  if (genTitle && sessionMsgs.length >= 2) {
+    const summary = sessionMsgs.slice(0, 6).map(m => m.role + ": " + m.content.substring(0, 120)).join("\n");
+    const titlePrompt = "Based on this Islamic Q&A session, generate a SHORT title in Bangla (4-6 words max). " +
+      "Output ONLY the title, nothing else, no quotes.\n\nSession:\n" + summary;
+    try {
+      const title = await groqCall(apiKey, [{ role: "user", content: titlePrompt }], "llama-3.1-8b-instant", 40, 0.3);
+      return res.json({ title: title.trim().replace(/^["']|["']$/g, "") });
+    } catch(e) {
+      return res.json({ title: "ইসলামিক আলোচনা" });
+    }
   }
 
-  const question = body && body.question ? String(body.question).trim() : "";
-  const convHistory = (body && Array.isArray(body.conversationHistory)) ? body.conversationHistory : [];
-
-  if (!question) return res.status(400).json({ error: "Question is required" });
-
-  // ─── LAYER 1: Question analysis (fast, cheap model) ────────────────────
+  // ── LAYER 1: Question analysis (fast) ───────────────────────────────────
   const analysisPrompt =
-    "Analyze this Islamic question. Reply ONLY with valid JSON — no markdown fences, no explanation.\n" +
+    "Analyze this Islamic question. Reply ONLY with valid JSON, no markdown.\n" +
     "Schema: {\"respondIn\":\"bangla|english\",\"isBanglish\":true|false," +
-    "\"questionMeaning\":\"meaning in English\",\"topics\":[\"topic1\"],\"primarySources\":[\"quran\",\"bukhari\",\"muslim\"]," +
-    "\"complexity\":\"simple|moderate|complex\"}\n\n" +
-    "Detection rules:\n" +
-    "- Banglish = Bangla words spelled with English letters. Examples: namaz, roja, dua, wudu, ghusl, " +
-    "quran e ki ache, Allah ke, jannat, jahannam, hajj, zakat, nikah, talaq, halal, haram, " +
-    "tawbah, iman, salat, sawm, shahada, tasbih, takbir, taslim, isha, fajr, zuhr, asr, maghrib " +
-    "→ set isBanglish=true, respondIn=bangla\n" +
-    "- Real English sentences → respondIn=english\n" +
-    "- Bangla script (বাংলা) → respondIn=bangla\n\n" +
+    "\"questionMeaning\":\"meaning in English\",\"topics\":[\"topic\"]," +
+    "\"primarySources\":[\"quran\",\"bukhari\",\"muslim\"],\"complexity\":\"simple|moderate|complex\"}\n\n" +
+    "DETECTION: Banglish = Bangla words in English letters (namaz, roja, wudu, dua, hajj, zakat, " +
+    "jannat, jahannam, iman, nikah, talaq, halal, haram, tawbah, quran, hadith, sunnah, farz, " +
+    "sunnot, makruh, haram, fiqh, isha, fajr, zuhr, asr, maghrib, takbir, taslim, tasbih, " +
+    "ghusl, tayammum, qibla, masjid, imam, khutbah, sadaqah, mahr) → isBanglish=true, respondIn=bangla\n" +
+    "Real English → respondIn=english | Bangla script → respondIn=bangla\n\n" +
     "Question: " + question.substring(0, 300);
 
   let analysis = {
-    respondIn: "bangla",
-    isBanglish: true,
-    questionMeaning: question,
+    respondIn: "bangla", isBanglish: true, questionMeaning: question,
     topics: ["general Islamic question"],
-    primarySources: ["quran", "bukhari", "muslim"],
-    complexity: "moderate"
+    primarySources: ["quran", "bukhari", "muslim"], complexity: "moderate"
   };
-
   try {
-    const raw = await groqCall(
-      apiKey,
-      [{ role: "user", content: analysisPrompt }],
-      "llama-3.1-8b-instant",
-      280,
-      0.1
-    );
-    const cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-    Object.assign(analysis, parsed);
-  } catch (_) {
-    // Layer 1 failed — use defaults, still proceed to Layer 2
-  }
+    const raw = await groqCall(apiKey, [{ role: "user", content: analysisPrompt }], "llama-3.1-8b-instant", 280, 0.1);
+    Object.assign(analysis, JSON.parse(raw.replace(/```json|```/g, "").trim()));
+  } catch(_) {}
 
-  // ─── LAYER 2: Deep scholarly answer (large model) ──────────────────────
-  const langRule = analysis.respondIn === "bangla"
-    ? "CRITICAL LANGUAGE RULE: Write your ENTIRE response in Bangla script (বাংলা). " +
-      "The user is typing in Banglish (Bangla using English letters). Understand their meaning fully, " +
-      "then respond in clear, beautiful, fluent Bangla. Never use English words except for Arabic Islamic terms."
-    : "Respond in clear, scholarly English.";
+  // ── LAYER 2: Deep scholarly answer ──────────────────────────────────────
+  const inBangla = analysis.respondIn === "bangla";
+  const langRule = inBangla
+    ? "CRITICAL: Write your ENTIRE response in Bangla script (বাংলা). User typed Banglish — understand fully, respond in fluent Bangla only. No English except Arabic Islamic terms."
+    : "Respond in clear scholarly English.";
 
   const systemPrompt =
-    "You are Nahida AI — a deeply knowledgeable and caring Islamic scholar AI.\n\n" +
-    "Your knowledge sources:\n" +
-    "• Al-Quranul Karim — all 114 Surahs with tafsir context\n" +
-    "• Sahih Bukhari — all 97 books, ~7563 hadiths\n" +
-    "• Sahih Muslim — all 56 books, ~7500 hadiths\n" +
-    "• Sunan Abu Dawud, Jami at-Tirmidhi, Sunan Ibn Majah, Sunan an-Nasai\n" +
-    "• Tafsir Ibn Kathir, Al-Tabari, Al-Qurtubi\n" +
-    "• Hanafi, Maliki, Shafi'i, Hanbali fiqh\n\n" +
+    "You are Nahida AI — a deeply learned Islamic scholar AI with mastery of classical and contemporary Islamic sciences.\n\n" +
+    "Sources you draw from:\n" +
+    "• Al-Quranul Karim — all 114 Surahs, Arabic text, meaning, full tafsir context\n" +
+    "• Sahih Bukhari (7563 hadiths) • Sahih Muslim (7500 hadiths)\n" +
+    "• Sunan Abu Dawud • Jami at-Tirmidhi • Sunan Ibn Majah • Sunan an-Nasai\n" +
+    "• Tafsir: Ibn Kathir, Al-Tabari, Al-Qurtubi, Al-Baghawi, As-Sa'di\n" +
+    "• Scholars: Imam Abu Hanifa, Imam Malik, Imam Shafi'i, Imam Ahmad ibn Hanbal\n" +
+    "• Contemporary: Ibn Baz, Ibn Uthaymin, Yusuf al-Qaradawi, Mufti Taqi Usmani\n\n" +
     langRule + "\n\n" +
-    "ACCURACY RULES (non-negotiable):\n" +
-    "1. NEVER fabricate hadith numbers. If uncertain of exact hadith number, write 'প্রায়' (approximately) or cite only the book name.\n" +
-    "2. Cite Quran as: সূরা [নাম] [X]:[Y] — e.g. সূরা আল-বাকারা ২:১৮৫\n" +
-    "3. Cite Hadith as: সহিহ বুখারী, কিতাবু [বিষয়] — e.g. সহিহ বুখারী, কিতাবুস সাওম\n" +
-    "4. If major scholars disagree, briefly note it.\n" +
-    "5. Be warm and caring — like a wise elder explaining to a beloved family member.\n\n" +
-    "RESPONSE FORMAT (use exactly this structure):\n" +
+    "ACCURACY NON-NEGOTIABLES:\n" +
+    "1. NEVER fabricate hadith numbers. If unsure, cite the book name only and write 'প্রায়' or 'approximately'.\n" +
+    "2. Quran citation: সূরা [Name] [Surah#]:[Ayah#] — e.g. সূরা আল-বাকারা ২:১৮৫\n" +
+    "3. Hadith citation: সহিহ বুখারী, কিতাবু [Book name] or Sahih Bukhari, Book of [Topic]\n" +
+    "4. When scholars of different madhabs differ, note it honestly.\n" +
+    "5. Tone: warm, caring, patient — like explaining to a beloved mother.\n\n" +
+    "RESPONSE STRUCTURE — always follow all 6 sections:\n\n" +
     "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\n\n" +
-    "[Direct, clear answer to the question]\n\n" +
-    "📖 কুরআনের দলিল:\n" +
-    "[Quranic verse(s) with citation]\n\n" +
-    "📚 হাদিসের দলিল:\n" +
-    "[Hadith evidence with citation]\n\n" +
-    "✅ বাস্তব নির্দেশনা:\n" +
-    "[Practical, actionable guidance]\n\n" +
-    "--- Internal context (do not show to user) ---\n" +
+    "▌সরাসরি উত্তর\n" +
+    "[2-3 sentences: clear, direct answer]\n\n" +
+    "📖 কুরআনের আলো\n" +
+    "[Relevant Quran ayah(s) with Surah:Ayah citation and brief explanation of the verse's meaning in context]\n\n" +
+    "📚 হাদিসের প্রমাণ\n" +
+    "[2-3 relevant hadiths with source citation. Include the wisdom behind each hadith.]\n\n" +
+    "🕌 বিদ্বানদের ব্যাখ্যা\n" +
+    "[What major scholars like Imam Ibn Kathir, Ibn Baz, Mufti Taqi Usmani, or relevant classical/modern scholar said. Include at least one classical and one contemporary view.]\n\n" +
+    "⚠️ প্রচলিত ভুল ধারণা\n" +
+    "[Common misconceptions people have about this topic, and what the correct Islamic position actually is. Be gentle but clear.]\n\n" +
+    "✅ আমলের নির্দেশনা\n" +
+    "[Practical step-by-step guidance for daily life. Warm, encouraging, easy to follow.]\n\n" +
+    "--- context ---\n" +
     "Topics: " + analysis.topics.join(", ") + "\n" +
-    "Sources to prioritize: " + analysis.primarySources.join(", ") + "\n" +
     "Question meaning: " + analysis.questionMeaning;
 
+  // Build full session history as messages for persistent memory
   const histMessages = [];
-  const recentHist = convHistory.slice(-4);
-  for (let i = 0; i < recentHist.length; i++) {
-    if (recentHist[i].q) histMessages.push({ role: "user", content: recentHist[i].q });
-    if (recentHist[i].a) histMessages.push({ role: "assistant", content: recentHist[i].a });
+  for (let i = 0; i < sessionMsgs.length; i++) {
+    const m = sessionMsgs[i];
+    if (m.role === "user" || m.role === "assistant") {
+      histMessages.push({ role: m.role, content: String(m.content).substring(0, 2000) });
+    }
   }
 
   const messages = [{ role: "system", content: systemPrompt }]
@@ -148,10 +131,10 @@ module.exports = async function handler(req, res) {
 
   let answer;
   try {
-    answer = await groqCall(apiKey, messages, "llama-3.3-70b-versatile", 1500, 0.2);
-  } catch (err) {
+    answer = await groqCall(apiKey, messages, "llama-3.3-70b-versatile", 2200, 0.2);
+  } catch(err) {
     return res.status(500).json({ error: err.message });
   }
 
-  return res.json({ answer: answer, analysis: analysis });
+  return res.json({ answer, analysis });
 };

@@ -15,310 +15,387 @@
 <title>Nahida AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{height:100%;height:-webkit-fill-available}
+
+:root{
+  --fs:16px;
+  --font:'Noto Serif Bengali','Segoe UI',Arial,sans-serif;
+  --bg:#fff;--fg:#0f0f0f;--fg2:#444;--fg3:#999;
+  --border:#e5e5e5;--border2:#ccc;
+  --surface:#f7f7f7;--surface2:#f0f0f0;
+  --accent:#111;--safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+
 body{
-  font-family:'Noto Serif Bengali','Segoe UI',Arial,sans-serif;
-  font-size:16px;color:#111;background:#fff;
+  font-family:var(--font);font-size:var(--fs);
+  color:var(--fg);background:var(--bg);
   display:flex;flex-direction:column;
   height:100vh;height:-webkit-fill-available;
   overflow:hidden;position:fixed;width:100%;
+  -webkit-font-smoothing:antialiased;
 }
 
-/* ── Topbar ── */
+/* ═══ TOPBAR ═══ */
 #topbar{
-  display:flex;align-items:center;
-  padding:0 12px;
-  height:52px;
-  padding-top:env(safe-area-inset-top);
-  border-bottom:1.5px solid #e8e8e8;
+  display:flex;align-items:center;gap:8px;
+  height:calc(52px + var(--safe-top));
+  padding:var(--safe-top) 12px 0;
+  border-bottom:1px solid var(--border);
   background:#fff;flex-shrink:0;z-index:20;
-  gap:8px;
 }
 .tb-btn{
-  background:none;border:1px solid #ddd;border-radius:8px;
-  padding:7px 10px;cursor:pointer;font-size:13px;color:#333;
   display:flex;align-items:center;gap:5px;
-  font-family:inherit;white-space:nowrap;flex-shrink:0;
-  min-height:36px;
-}
-.tb-btn:active{background:#f0f0f0}
-.brand{
-  flex:1;display:flex;align-items:center;justify-content:center;
-  gap:7px;min-width:0;
-}
-.brand-logo{width:30px;height:30px;flex-shrink:0}
-.brand-text{min-width:0}
-.brand-text h1{font-size:16px;font-weight:600;color:#111;white-space:nowrap}
-.brand-text p{font-size:10px;color:#999;white-space:nowrap}
-
-/* ── Chat ── */
-#chat{
-  flex:1;overflow-y:auto;overflow-x:hidden;
-  padding:16px 12px 8px;
-  display:flex;flex-direction:column;gap:16px;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-}
-
-/* Welcome screen */
-#welcome{
-  display:flex;flex-direction:column;align-items:center;
-  text-align:center;padding:20px 16px;gap:12px;margin:auto;
-}
-.w-logo{width:64px;height:64px;margin-bottom:4px}
-.w-arabic{font-size:18px;color:#555;direction:rtl;line-height:1.8}
-.w-title{font-size:20px;font-weight:600;color:#111}
-.w-desc{font-size:14px;color:#777;line-height:1.8;max-width:320px}
-.w-pills{
-  display:flex;flex-wrap:wrap;gap:8px;
-  justify-content:center;margin-top:6px;
-}
-.pill{
-  background:#f5f5f5;border:1px solid #e0e0e0;
-  border-radius:20px;padding:7px 14px;font-size:13px;
-  color:#444;cursor:pointer;font-family:inherit;
+  background:none;border:1px solid var(--border2);
+  border-radius:8px;padding:0 11px;height:34px;
+  cursor:pointer;font-size:13px;color:var(--fg2);
+  font-family:var(--font);white-space:nowrap;flex-shrink:0;
   transition:background .15s;
 }
-.pill:active{background:#e8e8e8}
+.tb-btn:active{background:var(--surface2)}
+.brand{
+  flex:1;display:flex;align-items:center;
+  justify-content:center;gap:7px;min-width:0;
+  cursor:pointer;user-select:none;
+}
+.logo-svg{width:28px;height:28px;flex-shrink:0}
+.brand-title{font-size:16px;font-weight:700;color:var(--fg);letter-spacing:.2px}
+.brand-sub{font-size:10px;color:var(--fg3)}
 
-/* Messages */
-.msg{display:flex;flex-direction:column;animation:up .25s ease}
-@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* ═══ CHAT AREA ═══ */
+#chat{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:16px 14px 6px;
+  display:flex;flex-direction:column;gap:20px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  scroll-behavior:smooth;
+}
+#chat::-webkit-scrollbar{width:3px}
+#chat::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ─ Welcome ─ */
+#welcome{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:16px 12px 8px;gap:10px;margin:auto;
+  max-width:340px;
+}
+.wlogo{width:60px;height:60px;margin-bottom:2px}
+.warabic{font-size:17px;color:var(--fg2);direction:rtl;line-height:1.9;margin-bottom:2px}
+.wtitle{font-size:20px;font-weight:700;color:var(--fg)}
+.wdesc{font-size:13.5px;color:var(--fg3);line-height:1.8}
+.wpills{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:8px}
+.pill{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:7px 14px;font-size:13px;
+  color:var(--fg2);cursor:pointer;font-family:var(--font);
+}
+.pill:active{background:var(--surface2);border-color:var(--border2)}
+
+/* ─ Messages ─ */
+.msg{display:flex;flex-direction:column;animation:up .22s ease both}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+
 .msg.user{align-items:flex-end}
-.msg.bot{align-items:flex-start}
-
-.user-bubble{
-  background:#111;color:#fff;
-  padding:10px 14px;border-radius:16px 16px 3px 16px;
-  font-size:15px;line-height:1.6;max-width:82%;
-  word-break:break-word;font-family:inherit;
+.user-bub{
+  background:var(--accent);color:#fff;
+  padding:11px 15px;border-radius:18px 18px 3px 18px;
+  font-size:var(--fs);line-height:1.65;max-width:82%;
+  word-break:break-word;font-family:var(--font);
 }
 
-.bot-label{
-  font-size:11px;color:#aaa;margin-bottom:5px;
-  display:flex;align-items:center;gap:4px;
+.msg.bot{align-items:flex-start;width:100%}
+.bot-meta{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--fg3);margin-bottom:5px;
+  font-family:'Segoe UI',Arial,sans-serif;
 }
-.bot-bubble{
-  background:#fafafa;border:1px solid #ebebeb;
-  padding:14px 15px;border-radius:3px 16px 16px 16px;
-  font-size:15px;line-height:2;word-break:break-word;
-  font-family:inherit;color:#111;white-space:pre-wrap;
-  max-width:100%;
+.bot-meta .crescent{font-size:13px}
+.tbadge{
+  background:var(--surface2);border-radius:8px;
+  padding:1px 7px;font-size:10px;color:var(--fg3);
 }
-.bismillah-line{
-  display:block;text-align:center;
-  font-size:18px;color:#444;
-  direction:rtl;margin-bottom:10px;
-  padding-bottom:10px;border-bottom:1px solid #e8e8e8;
+
+.bot-bub{
+  background:#fff;border:1px solid var(--border);
+  border-radius:3px 18px 18px 18px;
+  padding:16px 17px;width:100%;
+  font-size:var(--fs);line-height:2;
+  word-break:break-word;font-family:var(--font);color:var(--fg);
 }
-.section-icon{font-size:14px}
-.time-badge{
-  font-size:10px;color:#bbb;margin-left:6px;
+
+/* Response sections inside bot bubble */
+.bismillah{
+  display:block;text-align:center;font-size:19px;
+  color:var(--fg2);direction:rtl;padding-bottom:12px;
+  margin-bottom:14px;border-bottom:1px solid var(--border);
+}
+.rsec{margin-bottom:14px}
+.rsec:last-child{margin-bottom:0}
+.rsec-head{
+  font-size:13.5px;font-weight:700;color:var(--fg);
+  margin-bottom:6px;display:flex;align-items:center;gap:5px;
+}
+.rsec-body{
+  font-size:var(--fs);line-height:2;color:var(--fg2);
+  padding-left:4px;white-space:pre-wrap;word-break:break-word;
+}
+.direct-ans{
+  font-size:var(--fs);line-height:2;color:var(--fg);
+  font-weight:500;margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);white-space:pre-wrap;
+}
+.cite{
+  display:inline-block;background:var(--surface);
+  border:1px solid var(--border);border-radius:5px;
+  padding:1px 6px;font-size:12px;color:var(--fg3);
+  margin:1px 2px;vertical-align:middle;
+}
+.misconception-box{
+  background:#fffbf0;border:1px solid #f0e8c8;
+  border-radius:10px;padding:11px 13px;
+  font-size:var(--fs);line-height:2;color:var(--fg2);
+  white-space:pre-wrap;word-break:break-word;
+}
+.practical-box{
+  background:#f5fbf5;border:1px solid #c8e8c8;
+  border-radius:10px;padding:11px 13px;
+  font-size:var(--fs);line-height:2;color:var(--fg2);
+  white-space:pre-wrap;word-break:break-word;
+}
+
+/* ─ Typing indicator ─ */
+.typing-bub{
+  background:#fff;border:1px solid var(--border);
+  border-radius:3px 18px 18px 18px;
+  padding:15px 18px;display:flex;align-items:center;gap:5px;
+}
+.dot{width:7px;height:7px;background:var(--border2);border-radius:50%;animation:bl 1.3s infinite}
+.dot:nth-child(2){animation-delay:.22s}
+.dot:nth-child(3){animation-delay:.44s}
+@keyframes bl{0%,80%,100%{opacity:.3;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
+.typing-label{font-size:12px;color:var(--fg3);margin-left:4px;font-family:'Segoe UI',Arial,sans-serif}
+
+/* ═══ INPUT BAR ═══ */
+#inputbar{
+  flex-shrink:0;background:#fff;
+  border-top:1px solid var(--border);
+  padding:10px 12px calc(10px + var(--safe-bot));
+}
+.input-wrap{
+  display:flex;align-items:flex-end;gap:8px;
+  background:var(--surface);
+  border:1.5px solid var(--border2);
+  border-radius:22px;
+  padding:6px 6px 6px 16px;
+  transition:border-color .2s;
+}
+.input-wrap:focus-within{
+  border-color:var(--accent);
+  background:#fff;
+}
+#userinput{
+  flex:1;background:none;border:none;outline:none;
+  font-size:var(--fs);font-family:var(--font);
+  color:var(--fg);resize:none;
+  min-height:30px;max-height:110px;
+  line-height:1.55;padding:3px 0;
+  overflow-y:auto;
+  -webkit-appearance:none;
+}
+#userinput::placeholder{color:#bbb}
+#userinput::-webkit-scrollbar{width:3px}
+#userinput::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#sendbtn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--accent);color:#fff;border:none;
+  cursor:pointer;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;
+}
+#sendbtn:active:not(:disabled){background:#333;transform:scale(.92)}
+#sendbtn:disabled{background:var(--border2);cursor:default}
+.input-hint{
+  font-size:11px;color:var(--fg3);
+  text-align:center;margin-top:6px;
   font-family:'Segoe UI',Arial,sans-serif;
 }
 
-/* Typing */
-.typing-bubble{
-  background:#fafafa;border:1px solid #ebebeb;
-  padding:14px 16px;border-radius:3px 16px 16px 16px;
-  display:flex;align-items:center;gap:4px;
-}
-.dot{
-  width:7px;height:7px;background:#ccc;border-radius:50%;
-  animation:blink 1.2s infinite;
-}
-.dot:nth-child(2){animation-delay:.2s}
-.dot:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
-.typing-text{font-size:12px;color:#bbb;margin-left:6px;font-family:'Segoe UI',Arial,sans-serif}
-
-/* ── Input bar ── */
-#inputbar{
-  flex-shrink:0;
-  background:#fff;
-  border-top:1.5px solid #e8e8e8;
-  padding:10px 12px;
-  padding-bottom:max(10px, env(safe-area-inset-bottom));
-}
-.input-row{display:flex;gap:8px;align-items:flex-end}
-#userinput{
-  flex:1;border:1.5px solid #ccc;border-radius:22px;
-  padding:10px 16px;font-size:15px;font-family:inherit;
-  color:#111;background:#fff;resize:none;outline:none;
-  min-height:44px;max-height:120px;line-height:1.5;
-  transition:border-color .2s;
-  -webkit-appearance:none;
-}
-#userinput:focus{border-color:#111}
-#userinput::placeholder{color:#bbb}
-#sendbtn{
-  width:44px;height:44px;border-radius:50%;
-  background:#111;color:#fff;border:none;
-  cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  transition:background .15s;
-}
-#sendbtn:active{background:#333;transform:scale(.95)}
-#sendbtn:disabled{background:#ccc}
-.hint{font-size:11px;color:#bbb;text-align:center;margin-top:6px;line-height:1.5}
-
-/* ── Overlay ── */
+/* ═══ OVERLAY ═══ */
 #overlay{
   display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.4);z-index:40;
+  background:rgba(0,0,0,.38);z-index:40;
+  backdrop-filter:blur(1px);
 }
 #overlay.on{display:block}
 
-/* ── Slide panels ── */
+/* ═══ SLIDE PANELS ═══ */
 .panel{
   position:fixed;top:0;bottom:0;z-index:50;
   background:#fff;display:flex;flex-direction:column;
-  transition:transform .3s ease;will-change:transform;
-  width:min(300px,88vw);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+  width:min(310px,90vw);
 }
-#histpanel{left:0;border-right:1px solid #e8e8e8;transform:translateX(-105%)}
+#histpanel{left:0;border-right:1px solid var(--border);transform:translateX(-108%)}
 #histpanel.on{transform:translateX(0)}
-#settingspanel{right:0;border-left:1px solid #e8e8e8;transform:translateX(105%);overflow-y:auto}
+#settingspanel{right:0;border-left:1px solid var(--border);transform:translateX(108%);overflow-y:auto}
 #settingspanel.on{transform:translateX(0)}
 
-.panel-head{
+.phead{
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;border-bottom:1px solid #e8e8e8;flex-shrink:0;
-  padding-top:max(14px,env(safe-area-inset-top));
+  padding:calc(var(--safe-top) + 14px) 16px 14px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
 }
-.panel-head h3{font-size:16px;font-weight:600;color:#111}
+.phead h3{font-size:16px;font-weight:700;color:var(--fg)}
 .xbtn{
   background:none;border:none;cursor:pointer;
-  font-size:20px;color:#bbb;padding:4px;line-height:1;
+  font-size:22px;color:var(--fg3);padding:2px;line-height:1;
 }
-.xbtn:active{color:#555}
+.xbtn:active{color:var(--fg)}
 
-/* History list */
-#histlist{flex:1;overflow-y:auto;padding:10px 12px}
-.hempty{color:#bbb;font-size:13px;text-align:center;margin-top:30px}
-.hitem{
-  padding:10px 12px;border-radius:9px;cursor:pointer;
+/* ─ History panel ─ */
+#histlist{flex:1;overflow-y:auto;padding:8px 10px}
+.hempty{color:var(--fg3);font-size:13px;text-align:center;margin-top:40px;line-height:1.8}
+.session-item{
+  padding:11px 13px;border-radius:10px;cursor:pointer;
   border:1px solid transparent;margin-bottom:6px;
+  transition:background .15s,border-color .15s;
 }
-.hitem:active{background:#f5f5f5;border-color:#e8e8e8}
-.hq{font-size:13px;font-weight:600;color:#111;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
-.ha{font-size:12px;color:#aaa;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hfoot{padding:12px;border-top:1px solid #e8e8e8;flex-shrink:0}
+.session-item:active,.session-item:hover{
+  background:var(--surface);border-color:var(--border);
+}
+.session-item.active{
+  background:var(--surface);border-color:var(--border2);
+}
+.si-title{
+  font-size:13.5px;font-weight:600;color:var(--fg);
+  margin-bottom:3px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.si-preview{
+  font-size:12px;color:var(--fg3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.si-date{font-size:10.5px;color:var(--fg3);margin-top:2px;font-family:'Segoe UI',Arial,sans-serif}
+.hfoot{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:7px;flex-shrink:0}
+.new-chat-btn{
+  flex:1;background:var(--accent);color:#fff;border:none;
+  border-radius:9px;padding:10px;font-size:13.5px;
+  cursor:pointer;font-family:var(--font);font-weight:600;
+}
+.new-chat-btn:active{background:#333}
+.clr-btn{
+  flex:1;background:none;border:1.5px solid var(--border);
+  border-radius:9px;padding:10px;font-size:13.5px;
+  color:var(--fg3);cursor:pointer;font-family:var(--font);
+}
+.clr-btn:active{border-color:var(--border2);color:var(--fg)}
 
-/* Settings */
-.sbody{padding:16px}
-.sgroup{margin-bottom:24px}
-.sgroup-title{
-  font-size:11px;font-weight:600;color:#aaa;
-  letter-spacing:.6px;text-transform:uppercase;
+/* ─ Settings panel ─ */
+.sbody{padding:18px 15px;display:flex;flex-direction:column;gap:26px}
+.sg-title{
+  font-size:10.5px;font-weight:700;color:var(--fg3);
+  letter-spacing:.7px;text-transform:uppercase;
   margin-bottom:12px;font-family:'Segoe UI',Arial,sans-serif;
 }
-.srow{margin-bottom:14px}
-.srow label{display:block;font-size:14px;color:#333;margin-bottom:6px;font-weight:500}
-.srow input[type=password]{
-  width:100%;border:1.5px solid #ddd;border-radius:10px;
-  padding:10px 13px;font-size:14px;font-family:inherit;
-  color:#111;background:#fff;outline:none;
-  -webkit-appearance:none;
-}
-.srow input:focus{border-color:#111}
-.hint-text{font-size:12px;color:#aaa;margin-top:5px;line-height:1.6}
-.hint-text a{color:#555;text-decoration:underline}
-
-.fbtns{display:flex;gap:6px}
+.fbtns{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .fbtn{
-  flex:1;border:1.5px solid #ddd;border-radius:8px;
-  padding:9px 4px;cursor:pointer;background:#fff;
-  font-family:inherit;color:#555;font-size:13px;text-align:center;
+  border:1.5px solid var(--border2);border-radius:9px;
+  padding:10px 6px;cursor:pointer;background:#fff;
+  font-family:var(--font);color:var(--fg2);
+  font-size:13px;text-align:center;transition:all .15s;
 }
-.fbtn.on{background:#111;color:#fff;border-color:#111}
-.fbtn:active{opacity:.8}
+.fbtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fbtn:active:not(.on){background:var(--surface2)}
 
-.about-card{
-  background:#fafafa;border:1px solid #e8e8e8;
-  border-radius:12px;padding:14px;font-size:13px;
-  line-height:1.9;color:#666;
+.auth-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:15px 14px;
+  display:flex;flex-direction:column;gap:9px;
 }
+.auth-row{
+  display:flex;align-items:flex-start;gap:9px;
+  padding-bottom:9px;border-bottom:1px solid var(--border);
+  font-size:13.5px;line-height:1.7;
+}
+.auth-row:last-child{padding-bottom:0;border-bottom:none}
+.auth-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.auth-label{font-weight:700;color:var(--fg);display:block;margin-bottom:1px}
+.auth-detail{color:var(--fg2);font-size:12.5px;line-height:1.6}
 
+.made-with{
+  text-align:center;font-size:12px;color:var(--fg3);
+  line-height:1.8;padding:6px 0;font-family:'Segoe UI',Arial,sans-serif;
+}
 .save-btn{
-  width:100%;background:#111;color:#fff;border:none;
-  border-radius:12px;padding:13px;font-size:15px;
-  cursor:pointer;font-family:inherit;font-weight:500;
+  width:100%;background:var(--accent);color:#fff;border:none;
+  border-radius:11px;padding:13px;font-size:15px;font-weight:600;
+  cursor:pointer;font-family:var(--font);
 }
 .save-btn:active{background:#333}
 
-.clr-btn{
-  width:100%;background:none;border:1.5px solid #e8e8e8;
-  border-radius:10px;padding:10px;font-size:14px;
-  color:#aaa;cursor:pointer;font-family:inherit;
-}
-.clr-btn:active{border-color:#ccc;color:#666}
-
-/* Toast */
+/* ═══ TOAST ═══ */
 .toast{
-  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
-  background:#111;color:#fff;padding:9px 20px;border-radius:20px;
-  font-size:13px;z-index:999;pointer-events:none;
-  opacity:0;transition:opacity .25s;white-space:nowrap;
-  font-family:inherit;
+  position:fixed;bottom:calc(80px + var(--safe-bot));
+  left:50%;transform:translateX(-50%);
+  background:var(--accent);color:#fff;
+  padding:9px 20px;border-radius:20px;font-size:13px;
+  z-index:999;pointer-events:none;opacity:0;
+  transition:opacity .22s;white-space:nowrap;
+  font-family:var(--font);
 }
 .toast.on{opacity:1}
 
-/* Install banner */
-#install-bar{
-  display:none;
-  position:fixed;bottom:76px;left:12px;right:12px;
-  background:#111;color:#fff;border-radius:14px;
-  padding:12px 16px;z-index:998;
+/* ═══ INSTALL BANNER ═══ */
+#ibar{
+  display:none;position:fixed;
+  bottom:calc(76px + var(--safe-bot));
+  left:12px;right:12px;
+  background:var(--accent);color:#fff;
+  border-radius:14px;padding:12px 15px;z-index:998;
   flex-direction:row;align-items:center;gap:10px;
-  box-shadow:0 4px 20px rgba(0,0,0,.2);
+  box-shadow:0 4px 24px rgba(0,0,0,.18);
 }
-#install-bar.on{display:flex}
-#install-bar span{flex:1;font-size:14px;font-family:inherit}
-.inst-yes{
-  background:#fff;color:#111;border:none;border-radius:8px;
-  padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;
-  white-space:nowrap;
-}
-.inst-no{
-  background:none;border:none;color:#888;
-  font-size:18px;cursor:pointer;padding:2px;line-height:1;
-}
+#ibar.on{display:flex}
+#ibar span{flex:1;font-size:13.5px;font-family:var(--font)}
+.iy{background:#fff;color:var(--fg);border:none;border-radius:8px;
+  padding:7px 14px;font-size:13px;cursor:pointer;font-family:var(--font);font-weight:600;white-space:nowrap}
+.in{background:none;border:none;color:rgba(255,255,255,.6);font-size:20px;cursor:pointer;padding:2px;line-height:1}
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div id="topbar">
   <button class="tb-btn" id="hist-toggle">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
       <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
     ইতিহাস
   </button>
 
   <div class="brand" id="brand-home">
-    <svg class="brand-logo" viewBox="0 0 80 80" fill="none">
-      <circle cx="40" cy="40" r="35" stroke="#111" stroke-width="2"/>
+    <svg class="logo-svg" viewBox="0 0 80 80" fill="none">
+      <circle cx="40" cy="40" r="35" stroke="#111" stroke-width="2.2"/>
       <circle cx="40" cy="40" r="28" stroke="#111" stroke-width="1"/>
-      <circle cx="37" cy="40" r="16" fill="#111"/>
-      <circle cx="43" cy="35" r="12.5" fill="#fff"/>
-      <g transform="translate(57,22)">
-        <polygon points="0,-6.5 1.6,-2.2 6.2,-2.2 2.7,0.8 4,5.5 0,3 -4,5.5 -2.7,0.8 -6.2,-2.2 -1.6,-2.2" fill="#111"/>
+      <circle cx="37" cy="40" r="16.5" fill="#111"/>
+      <circle cx="43.5" cy="34.5" r="12.5" fill="#fff"/>
+      <g transform="translate(57.5,21.5)">
+        <polygon points="0,-7 1.7,-2.4 6.6,-2.4 2.8,0.9 4.2,6 0,3.3 -4.2,6 -2.8,0.9 -6.6,-2.4 -1.7,-2.4" fill="#111"/>
       </g>
     </svg>
-    <div class="brand-text">
-      <h1>Nahida AI</h1>
-      <p>ইসলামিক প্রশ্নোত্তর</p>
+    <div>
+      <div class="brand-title">Nahida AI</div>
+      <div class="brand-sub">ইসলামিক প্রশ্নোত্তর</div>
     </div>
   </div>
 
   <button class="tb-btn" id="settings-toggle">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
     </svg>
@@ -326,155 +403,161 @@ body{
   </button>
 </div>
 
-<div id="chat">
-  <div id="welcome">
-    <svg class="w-logo" viewBox="0 0 80 80" fill="none">
-      <circle cx="40" cy="40" r="35" stroke="#111" stroke-width="2"/>
-      <circle cx="40" cy="40" r="28" stroke="#111" stroke-width="1"/>
-      <circle cx="37" cy="40" r="16" fill="#111"/>
-      <circle cx="43" cy="35" r="12.5" fill="#fff"/>
-      <g transform="translate(57,22)">
-        <polygon points="0,-6.5 1.6,-2.2 6.2,-2.2 2.7,0.8 4,5.5 0,3 -4,5.5 -2.7,0.8 -6.2,-2.2 -1.6,-2.2" fill="#111"/>
-      </g>
-    </svg>
-    <div class="w-arabic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
-    <div class="w-title">Nahida AI-তে স্বাগতম</div>
-    <div class="w-desc">
-      কুরআন, সহিহ বুখারী ও সহিহ মুসলিমের আলোকে<br/>ইসলামিক প্রশ্নের উত্তর পাবেন।<br/><br/>
-      <strong>বাংলা বা English অক্ষরে বাংলা</strong> (Banglish) লিখলেও বুঝবে।
-    </div>
-    <div class="w-pills" id="quick-pills">
-      <button class="pill" data-q="Namaz ki? Koto waqt namaz pora jay?">নামায কতবার?</button>
-      <button class="pill" data-q="Roja rakhar niyom ki?">রোজার নিয়ম</button>
-      <button class="pill" data-q="Quran e ki bola ache tawbah somporke?">তাওবাহ</button>
-      <button class="pill" data-q="Zakat ki? Kake dite hobe?">যাকাত</button>
-      <button class="pill" data-q="Jannat er kotha Quran e kothay ache?">জান্নাতের বর্ণনা</button>
-      <button class="pill" data-q="Wudu kivabe korbo?">ওযু করার নিয়ম</button>
-    </div>
-  </div>
-</div>
+<!-- CHAT -->
+<div id="chat"></div>
 
+<!-- INPUT BAR -->
 <div id="inputbar">
-  <div class="input-row">
+  <div class="input-wrap" id="input-wrap">
     <textarea id="userinput"
       placeholder="প্রশ্ন লিখুন… (যেমন: Namaz ki?)"
       rows="1"
-      autocomplete="off"
-      autocorrect="off"
-      autocapitalize="off"
-      spellcheck="false"></textarea>
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    ></textarea>
     <button id="sendbtn" aria-label="পাঠান">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
         <line x1="22" y1="2" x2="11" y2="13"/>
         <polygon points="22 2 15 22 11 13 2 9 22 2"/>
       </svg>
     </button>
   </div>
-  <div class="hint">ইংরেজি অক্ষরে বাংলা লিখলেও Nahida AI বুঝবে ✓</div>
+  <div class="input-hint">বাংলা বা ইংরেজি অক্ষরে বাংলা — দুটোই বোঝে ✓</div>
 </div>
 
+<!-- OVERLAY -->
 <div id="overlay"></div>
 
-<!-- History panel -->
+<!-- HISTORY PANEL -->
 <div class="panel" id="histpanel">
-  <div class="panel-head">
-    <h3>প্রশ্নের ইতিহাস</h3>
+  <div class="phead">
+    <h3>আলোচনার ইতিহাস</h3>
     <button class="xbtn" id="hist-close">✕</button>
   </div>
-  <div id="histlist"><p class="hempty">এখনো কোনো প্রশ্ন নেই।</p></div>
+  <div id="histlist"></div>
   <div class="hfoot">
-    <button class="clr-btn" id="clr-hist">সব ইতিহাস মুছুন</button>
+    <button class="new-chat-btn" id="new-chat-btn">＋ নতুন আলোচনা</button>
+    <button class="clr-btn" id="clr-all">সব মুছুন</button>
   </div>
 </div>
 
-<!-- Settings panel -->
+<!-- SETTINGS PANEL -->
 <div class="panel" id="settingspanel">
-  <div class="panel-head">
+  <div class="phead">
     <h3>সেটিং</h3>
     <button class="xbtn" id="settings-close">✕</button>
   </div>
   <div class="sbody">
 
-    <div class="sgroup">
-      <div class="sgroup-title">Groq API Key</div>
-      <div class="srow">
-        <label>API Key (ঐচ্ছিক)</label>
-        <input type="password" id="s-key"
-          placeholder="gsk_xxxx — খালি রাখলে সার্ভারের key চলবে"
-          autocomplete="off" autocorrect="off" autocapitalize="off"/>
-        <div class="hint-text">
-          বিনামূল্যে পেতে: <a href="https://console.groq.com" target="_blank">console.groq.com</a><br/>
-          Personal key থাকলে এখানে দিন।
+    <div>
+      <div class="sg-title">লেখার আকার</div>
+      <div class="fbtns">
+        <button class="fbtn" data-fs="14">ছোট<br/><small>14px</small></button>
+        <button class="fbtn" data-fs="16">মাঝারি<br/><small>16px</small></button>
+        <button class="fbtn" data-fs="18">বড়<br/><small>18px</small></button>
+        <button class="fbtn" data-fs="20">বড়তর<br/><small>20px</small></button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sg-title">তথ্যের নির্ভরযোগ্যতা</div>
+      <div class="auth-card">
+        <div class="auth-row">
+          <span class="auth-icon">📖</span>
+          <div>
+            <span class="auth-label">আল-কুরআনুল কারিম</span>
+            <span class="auth-detail">সকল ১১৪টি সূরা, আরবি মূলপাঠ ও অর্থসহ। তাফসির ইবনে কাসির, তাবারি ও কুরতুবির আলোকে।</span>
+          </div>
+        </div>
+        <div class="auth-row">
+          <span class="auth-icon">📚</span>
+          <div>
+            <span class="auth-label">সহিহ বুখারী</span>
+            <span class="auth-detail">ইমাম মুহাম্মাদ আল-বুখারী রচিত। ৯৭টি কিতাব, ৭,৫৬৩টি হাদিস। সর্বোচ্চ মানদণ্ডে যাচাইকৃত।</span>
+          </div>
+        </div>
+        <div class="auth-row">
+          <span class="auth-icon">📚</span>
+          <div>
+            <span class="auth-label">সহিহ মুসলিম</span>
+            <span class="auth-detail">ইমাম মুসলিম ইবনুল হাজ্জাজ রচিত। ৫৬টি কিতাব, ৭,৪৭০+ হাদিস।</span>
+          </div>
+        </div>
+        <div class="auth-row">
+          <span class="auth-icon">📗</span>
+          <div>
+            <span class="auth-label">অন্যান্য সহিহ সূত্র</span>
+            <span class="auth-detail">সুনানে আবু দাউদ • জামি তিরমিযী • সুনানে ইবনে মাজাহ • সুনানে নাসাঈ</span>
+          </div>
+        </div>
+        <div class="auth-row">
+          <span class="auth-icon">🕌</span>
+          <div>
+            <span class="auth-label">চার মাযহাবের ফিকহ</span>
+            <span class="auth-detail">হানাফি • মালিকি • শাফেয়ি • হাম্বলি — ইমামদের মতামত সহ।</span>
+          </div>
+        </div>
+        <div class="auth-row">
+          <span class="auth-icon">🧠</span>
+          <div>
+            <span class="auth-label">আধুনিক বিদ্বানগণ</span>
+            <span class="auth-detail">শায়খ ইবনে বায • শায়খ ইবনে উসাইমিন • মুফতি তাকি উসমানি • ড. ইউসুফ আল-কারাদাভি</span>
+          </div>
+        </div>
+        <div class="auth-row">
+          <span class="auth-icon">⚠️</span>
+          <div>
+            <span class="auth-label">গুরুত্বপূর্ণ নোট</span>
+            <span class="auth-detail">এটি একটি AI সহকারী। জটিল মাসায়েলে স্থানীয় আলেমের পরামর্শ নেওয়া উচিত।</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="sgroup">
-      <div class="sgroup-title">লেখার আকার</div>
-      <div class="fbtns">
-        <button class="fbtn" data-fs="14">ছোট (14)</button>
-        <button class="fbtn on" data-fs="16">মাঝারি</button>
-        <button class="fbtn" data-fs="18">বড় (18)</button>
-        <button class="fbtn" data-fs="20">বড়তর</button>
-      </div>
+    <div class="made-with">
+      Nahida AI v2.0<br/>
+      ❤️ আম্মার জন্য ভালোবাসায় তৈরি
     </div>
 
-    <div class="sgroup">
-      <div class="sgroup-title">ইতিহাস</div>
-      <div class="srow">
-        <label id="hist-stat">মোট প্রশ্ন: ০টি</label>
-        <button class="clr-btn" style="margin-top:8px" id="clr-hist2">সব মুছুন</button>
-      </div>
-    </div>
-
-    <div class="sgroup">
-      <div class="sgroup-title">অ্যাপ সম্পর্কে</div>
-      <div class="about-card">
-        <strong>Nahida AI</strong> v1.0<br/><br/>
-        📖 কুরআনুল কারিম — সকল ১১৪ সূরা<br/>
-        📚 সহিহ বুখারী — ৯৭ কিতাব<br/>
-        📚 সহিহ মুসলিম — ৫৬ কিতাব<br/>
-        📚 সুনানে আবু দাউদ, তিরমিযী, ইবনে মাজাহ<br/>
-        🧠 দ্বি-স্তরীয় AI চিন্তা<br/><br/>
-        ❤️ আম্মার জন্য তৈরি করা হয়েছে
-      </div>
-    </div>
-
-    <button class="save-btn" id="save-settings">সেটিং সংরক্ষণ করুন</button>
-
+    <button class="save-btn" id="save-settings">সংরক্ষণ করুন</button>
   </div>
 </div>
 
-<!-- Install banner -->
-<div id="install-bar">
+<!-- INSTALL BANNER -->
+<div id="ibar">
   <span>📲 হোম স্ক্রিনে যোগ করুন</span>
-  <button class="inst-yes" id="inst-yes">যোগ করুন</button>
-  <button class="inst-no" id="inst-no">✕</button>
+  <button class="iy" id="inst-yes">যোগ করুন</button>
+  <button class="in" id="inst-no">✕</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State
-var chatHistory = [];
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+var FS = 16;
 var loading = false;
-var fs = 16;
-var customKey = '';
 var deferredInstall = null;
 
-try { chatHistory = JSON.parse(localStorage.getItem('nh_hist') || '[]'); } catch(_){}
-try { fs = parseInt(localStorage.getItem('nh_fs') || '16'); } catch(_){}
-try { customKey = localStorage.getItem('nh_key') || ''; } catch(_){}
+// Session: current active chat
+var currentSession = null; // { id, title, messages: [{role,content}], startedAt }
 
-// ── Boot
+// All saved sessions
+var allSessions = [];
+
+try { FS = parseInt(localStorage.getItem('nh_fs') || '16'); } catch(_) {}
+try { allSessions = JSON.parse(localStorage.getItem('nh_sessions') || '[]'); } catch(_) {}
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
-  setFs(fs, false);
-  if (customKey) document.getElementById('s-key').value = customKey;
-  renderHist();
-  updateStat();
-  initEvents();
+  applyFs(FS);
+  markFs(FS);
+  showWelcome();
+  renderHistList();
+  attachEvents();
   registerSW();
-  markActiveFbtn(fs);
 });
 
 function registerSW() {
@@ -483,96 +566,87 @@ function registerSW() {
   }
 }
 
-// ── Font size
-function setFs(size, save) {
-  fs = size;
-  document.documentElement.style.fontSize = size + 'px';
-  document.body.style.fontSize = size + 'px';
-  if (save) localStorage.setItem('nh_fs', size);
+// ═══════════════════════════════════════════════════════════
+// FONT SIZE
+// ═══════════════════════════════════════════════════════════
+function applyFs(size) {
+  FS = size;
+  document.documentElement.style.setProperty('--fs', size + 'px');
 }
-function markActiveFbtn(size) {
+function markFs(size) {
   document.querySelectorAll('.fbtn').forEach(function(b) {
     b.classList.toggle('on', parseInt(b.dataset.fs) === size);
   });
 }
 
-// ── Events
-function initEvents() {
-  // Quick pills
-  document.getElementById('quick-pills').addEventListener('click', function(e) {
-    var pill = e.target.closest('.pill');
-    if (pill) askQuestion(pill.dataset.q);
-  });
+// ═══════════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════════
+function attachEvents() {
+  // Brand → new chat
+  document.getElementById('brand-home').addEventListener('click', startNewSession);
 
-  // Textarea
+  // Input auto-resize
   var inp = document.getElementById('userinput');
   inp.addEventListener('input', function() {
     this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    var newH = Math.min(this.scrollHeight, 110);
+    this.style.height = newH + 'px';
+    // only show scrollbar if content overflows
+    this.style.overflowY = this.scrollHeight > 110 ? 'auto' : 'hidden';
   });
   inp.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
   });
-
-  // Send button
   document.getElementById('sendbtn').addEventListener('click', sendMsg);
-
-  // Brand logo → reset
-  document.getElementById('brand-home').addEventListener('click', function() {
-    var chat = document.getElementById('chat');
-    chat.innerHTML = '';
-    showWelcome();
-  });
 
   // History panel
   document.getElementById('hist-toggle').addEventListener('click', function() { openPanel('hist'); });
   document.getElementById('hist-close').addEventListener('click', closePanels);
-  document.getElementById('clr-hist').addEventListener('click', clearHist);
+  document.getElementById('new-chat-btn').addEventListener('click', function() { startNewSession(); closePanels(); });
+  document.getElementById('clr-all').addEventListener('click', clearAllSessions);
 
   // Settings panel
   document.getElementById('settings-toggle').addEventListener('click', function() { openPanel('settings'); });
   document.getElementById('settings-close').addEventListener('click', closePanels);
-  document.getElementById('clr-hist2').addEventListener('click', function() { clearHist(); updateStat(); });
   document.getElementById('save-settings').addEventListener('click', saveSettings);
 
   // Font buttons
   document.querySelectorAll('.fbtn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      var size = parseInt(this.dataset.fs);
-      setFs(size, false);
-      markActiveFbtn(size);
+      var s = parseInt(this.dataset.fs);
+      applyFs(s); markFs(s);
     });
   });
 
   // Overlay
   document.getElementById('overlay').addEventListener('click', closePanels);
 
-  // PWA install
+  // PWA
   window.addEventListener('beforeinstallprompt', function(e) {
     deferredInstall = e;
-    if (!localStorage.getItem('nh_inst')) {
-      setTimeout(showInstallBar, 4000);
-    }
+    if (!localStorage.getItem('nh_inst')) setTimeout(showIBar, 5000);
   });
   window.addEventListener('appinstalled', function() {
     localStorage.setItem('nh_inst', '1');
-    hideInstallBar();
+    document.getElementById('ibar').classList.remove('on');
   });
   document.getElementById('inst-yes').addEventListener('click', doInstall);
   document.getElementById('inst-no').addEventListener('click', function() {
-    hideInstallBar();
+    document.getElementById('ibar').classList.remove('on');
     localStorage.setItem('nh_inst', '1');
   });
 }
 
-// ── Panels
+// ═══════════════════════════════════════════════════════════
+// PANELS
+// ═══════════════════════════════════════════════════════════
 function openPanel(which) {
   closePanels();
   if (which === 'hist') {
-    renderHist();
+    renderHistList();
     document.getElementById('histpanel').classList.add('on');
   } else {
-    updateStat();
     document.getElementById('settingspanel').classList.add('on');
   }
   document.getElementById('overlay').classList.add('on');
@@ -583,156 +657,305 @@ function closePanels() {
   document.getElementById('overlay').classList.remove('on');
 }
 
-// ── History
-function saveHist() {
-  try { localStorage.setItem('nh_hist', JSON.stringify(chatHistory.slice(-60))); } catch(_){}
+// ═══════════════════════════════════════════════════════════
+// SESSIONS
+// ═══════════════════════════════════════════════════════════
+function newSessionObj() {
+  return { id: Date.now().toString(), title: 'নতুন আলোচনা', messages: [], startedAt: Date.now() };
 }
-function clearHist() {
-  chatHistory = [];
-  saveHist();
-  renderHist();
-  updateStat();
-  toast('ইতিহাস মুছা হয়েছে');
+
+function startNewSession() {
+  // save current session if it has content
+  saveCurrentSession();
+  currentSession = newSessionObj();
+  var chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  showWelcome();
 }
-function updateStat() {
-  var el = document.getElementById('hist-stat');
-  if (el) el.textContent = 'মোট প্রশ্ন: ' + chatHistory.length + 'টি';
+
+function saveCurrentSession() {
+  if (!currentSession || currentSession.messages.length === 0) return;
+  var existing = allSessions.findIndex(function(s) { return s.id === currentSession.id; });
+  if (existing >= 0) allSessions[existing] = currentSession;
+  else allSessions.unshift(currentSession);
+  // keep max 40 sessions
+  allSessions = allSessions.slice(0, 40);
+  localStorage.setItem('nh_sessions', JSON.stringify(allSessions));
 }
-function renderHist() {
+
+function loadSession(id) {
+  saveCurrentSession();
+  var s = allSessions.find(function(s) { return s.id === id; });
+  if (!s) return;
+  currentSession = JSON.parse(JSON.stringify(s)); // deep clone
+  var chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  // replay messages
+  for (var i = 0; i < currentSession.messages.length; i++) {
+    var m = currentSession.messages[i];
+    if (m.role === 'user') appendUserBubble(m.content);
+    else appendBotBubble(m.content);
+  }
+  closePanels();
+}
+
+function clearAllSessions() {
+  allSessions = [];
+  currentSession = newSessionObj();
+  localStorage.removeItem('nh_sessions');
+  renderHistList();
+  var chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  showWelcome();
+  closePanels();
+  toast('সব ইতিহাস মুছা হয়েছে');
+}
+
+async function generateTitle(session) {
+  if (!session || session.messages.length < 2) return;
+  try {
+    var resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: '',
+        sessionMessages: session.messages.slice(0, 6),
+        genTitle: true
+      })
+    });
+    var data = await resp.json();
+    if (data && data.title) {
+      session.title = data.title;
+      saveCurrentSession();
+      renderHistList();
+    }
+  } catch(_) {}
+}
+
+// ═══════════════════════════════════════════════════════════
+// HISTORY RENDER
+// ═══════════════════════════════════════════════════════════
+function renderHistList() {
   var list = document.getElementById('histlist');
-  if (!chatHistory.length) {
-    list.innerHTML = '<p class="hempty">এখনো কোনো প্রশ্ন নেই।</p>';
+  var sessions = allSessions.filter(function(s) { return s.messages.length > 0; });
+  if (!sessions.length) {
+    list.innerHTML = '<p class="hempty">এখনো কোনো আলোচনা নেই।<br/>নিচের বক্সে প্রশ্ন করুন।</p>';
     return;
   }
   var html = '';
-  for (var i = chatHistory.length - 1; i >= 0; i--) {
-    var item = chatHistory[i];
-    html += '<div class="hitem" data-idx="' + i + '">' +
-      '<div class="hq">' + esc(item.q) + '</div>' +
-      '<div class="ha">' + esc(stripBismillah(item.a).substring(0, 65)) + '…</div>' +
+  for (var i = 0; i < sessions.length; i++) {
+    var s = sessions[i];
+    var active = currentSession && s.id === currentSession.id ? ' active' : '';
+    var preview = '';
+    if (s.messages.length > 0) preview = s.messages[s.messages.length - 1].content.replace(/بِسْمِ.*?\n/g, '').trim().substring(0, 55);
+    var date = new Date(s.startedAt).toLocaleDateString('bn-BD', { month:'short', day:'numeric' });
+    html += '<div class="session-item' + active + '" data-id="' + esc(s.id) + '">' +
+      '<div class="si-title">' + esc(s.title) + '</div>' +
+      (preview ? '<div class="si-preview">' + esc(preview) + '…</div>' : '') +
+      '<div class="si-date">' + date + ' • ' + s.messages.length / 2 | 0 + 'টি প্রশ্ন</div>' +
       '</div>';
   }
   list.innerHTML = html;
-  list.querySelectorAll('.hitem').forEach(function(el) {
-    el.addEventListener('click', function() {
-      loadHistItem(parseInt(this.dataset.idx));
-    });
+  list.querySelectorAll('.session-item').forEach(function(el) {
+    el.addEventListener('click', function() { loadSession(this.dataset.id); });
   });
 }
-function loadHistItem(idx) {
-  var item = chatHistory[idx];
-  var chat = document.getElementById('chat');
-  chat.innerHTML = '';
-  appendMsg('user', item.q);
-  appendMsg('bot', item.a);
-  closePanels();
-}
-function stripBismillah(s) {
-  return s.replace(/بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\s*/g, '').trim();
-}
 
-// ── Settings
+// ═══════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════
 function saveSettings() {
-  var k = document.getElementById('s-key').value.trim();
-  customKey = k;
-  if (k) localStorage.setItem('nh_key', k);
-  else localStorage.removeItem('nh_key');
-  setFs(fs, true);
+  localStorage.setItem('nh_fs', FS);
   closePanels();
   toast('সেটিং সংরক্ষিত হয়েছে ✓');
 }
 
-// ── Chat
+// ═══════════════════════════════════════════════════════════
+// CHAT UI
+// ═══════════════════════════════════════════════════════════
+var LOGO_SVG = '<svg width="14" height="14" viewBox="0 0 80 80" fill="none">' +
+  '<circle cx="40" cy="40" r="35" stroke="#111" stroke-width="3"/>' +
+  '<circle cx="37" cy="40" r="16" fill="#111"/>' +
+  '<circle cx="43" cy="35" r="12" fill="#fff"/>' +
+  '<g transform="translate(57,22)"><polygon points="0,-6 1.5,-2 6,-2 2.5,0.8 3.8,5.5 0,3 -3.8,5.5 -2.5,0.8 -6,-2 -1.5,-2" fill="#111"/></g>' +
+  '</svg>';
+
 function showWelcome() {
   var chat = document.getElementById('chat');
   var w = document.createElement('div');
   w.id = 'welcome';
-  w.innerHTML = '<svg class="w-logo" viewBox="0 0 80 80" fill="none">' +
-    '<circle cx="40" cy="40" r="35" stroke="#111" stroke-width="2"/>' +
+  w.innerHTML =
+    '<svg class="wlogo" viewBox="0 0 80 80" fill="none">' +
+    '<circle cx="40" cy="40" r="35" stroke="#111" stroke-width="2.2"/>' +
     '<circle cx="40" cy="40" r="28" stroke="#111" stroke-width="1"/>' +
-    '<circle cx="37" cy="40" r="16" fill="#111"/>' +
-    '<circle cx="43" cy="35" r="12.5" fill="#fff"/>' +
-    '<g transform="translate(57,22)"><polygon points="0,-6.5 1.6,-2.2 6.2,-2.2 2.7,0.8 4,5.5 0,3 -4,5.5 -2.7,0.8 -6.2,-2.2 -1.6,-2.2" fill="#111"/></g>' +
+    '<circle cx="37" cy="40" r="16.5" fill="#111"/>' +
+    '<circle cx="43.5" cy="34.5" r="12.5" fill="#fff"/>' +
+    '<g transform="translate(57.5,21.5)"><polygon points="0,-7 1.7,-2.4 6.6,-2.4 2.8,0.9 4.2,6 0,3.3 -4.2,6 -2.8,0.9 -6.6,-2.4 -1.7,-2.4" fill="#111"/></g>' +
     '</svg>' +
-    '<div class="w-arabic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>' +
-    '<div class="w-title">Nahida AI-তে স্বাগতম</div>' +
-    '<div class="w-desc">কুরআন, সহিহ বুখারী ও মুসলিমের আলোকে<br/>ইসলামিক প্রশ্নের উত্তর পাবেন।</div>' +
-    '<div class="w-pills" id="quick-pills">' +
+    '<div class="warabic">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>' +
+    '<div class="wtitle">আস-সালামু আলাইকুম</div>' +
+    '<div class="wdesc">কুরআন, সহিহ বুখারী ও সহিহ মুসলিমের আলোকে<br/>ইসলামিক প্রশ্নের উত্তর পাবেন।<br/><br/>বাংলা বা <strong>ইংরেজি হরফে বাংলা</strong> লিখলেও বুঝবে।</div>' +
+    '<div class="wpills">' +
     '<button class="pill" data-q="Namaz ki? Koto waqt namaz pora jay?">নামায কতবার?</button>' +
     '<button class="pill" data-q="Roja rakhar niyom ki?">রোজার নিয়ম</button>' +
-    '<button class="pill" data-q="Zakat ki? Kake dite hobe?">যাকাত</button>' +
-    '<button class="pill" data-q="Wudu kivabe korbo?">ওযু</button>' +
+    '<button class="pill" data-q="Zakat ki? Kake dite hobe?">যাকাতের বিধান</button>' +
+    '<button class="pill" data-q="Wudu kivabe korbo sothik niyome?">ওযুর নিয়ম</button>' +
+    '<button class="pill" data-q="Quran tilawat er fazilat ki?">তিলাওয়াতের ফজিলত</button>' +
+    '<button class="pill" data-q="Jannat er kotha Quran e kothay ache?">জান্নাতের বর্ণনা</button>' +
     '</div>';
   chat.appendChild(w);
-  document.getElementById('quick-pills').addEventListener('click', function(e) {
-    var pill = e.target.closest('.pill');
-    if (pill) askQuestion(pill.dataset.q);
+  w.querySelectorAll('.pill').forEach(function(p) {
+    p.addEventListener('click', function() { askQuestion(this.dataset.q); });
   });
 }
 
-function askQuestion(q) {
-  document.getElementById('userinput').value = q;
-  sendMsg();
+function removeWelcome() {
+  var w = document.getElementById('welcome');
+  if (w) w.remove();
 }
 
 function esc(s) {
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function appendMsg(role, text, elapsed) {
+function appendUserBubble(text) {
   var chat = document.getElementById('chat');
-  var w = document.getElementById('welcome');
-  if (w) w.remove();
-
   var div = document.createElement('div');
-  div.className = 'msg ' + role;
-
-  if (role === 'user') {
-    div.innerHTML = '<div class="user-bubble">' + esc(text) + '</div>';
-  } else {
-    var badge = elapsed ? '<span class="time-badge">⏱ ' + elapsed + 's</span>' : '';
-    var formatted = esc(text).replace(
-      /بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ/g,
-      '<span class="bismillah-line">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>'
-    );
-    div.innerHTML =
-      '<div class="bot-label">☽ Nahida AI' + badge + '</div>' +
-      '<div class="bot-bubble">' + formatted + '</div>';
-  }
-
+  div.className = 'msg user';
+  div.innerHTML = '<div class="user-bub">' + esc(text) + '</div>';
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
-  return div;
+}
+
+function parseAndRenderAnswer(rawText) {
+  // Parse sections out of the raw AI text and render structured HTML
+  var bism = 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ';
+  var hasBism = rawText.includes(bism);
+
+  // Strip bismillah from raw for section parsing
+  var text = rawText.replace(bism, '').trim();
+
+  // Define section patterns (both Bangla & English variants)
+  var sections = [
+    { key: 'direct',  heads: ['▌সরাসরি উত্তর', 'সরাসরি উত্তর', 'Direct Answer'] },
+    { key: 'quran',   heads: ['📖 কুরআনের আলো', 'কুরআনের আলো', 'কুরআনের দলিল', 'Quranic Evidence'] },
+    { key: 'hadith',  heads: ['📚 হাদিসের প্রমাণ', 'হাদিসের দলিল', 'হাদিসের প্রমাণ', 'Hadith Evidence'] },
+    { key: 'scholars',heads: ['🕌 বিদ্বানদের ব্যাখ্যা', 'বিদ্বানদের ব্যাখ্যা', 'Scholarly Views'] },
+    { key: 'misconc', heads: ['⚠️ প্রচলিত ভুল ধারণা', 'প্রচলিত ভুল ধারণা', 'Common Misconceptions'] },
+    { key: 'practical',heads: ['✅ আমলের নির্দেশনা', 'আমলের নির্দেশনা', 'Practical Guidance'] }
+  ];
+
+  // Find section positions
+  var positions = [];
+  sections.forEach(function(sec) {
+    sec.heads.forEach(function(head) {
+      var idx = text.indexOf(head);
+      if (idx !== -1) positions.push({ idx: idx, key: sec.key, head: head, len: head.length });
+    });
+  });
+  positions.sort(function(a,b) { return a.idx - b.idx; });
+
+  // Deduplicate by key (take first occurrence)
+  var seen = {};
+  positions = positions.filter(function(p) {
+    if (seen[p.key]) return false;
+    seen[p.key] = true;
+    return true;
+  });
+
+  var html = '';
+  if (hasBism) html += '<span class="bismillah">' + bism + '</span>';
+
+  if (positions.length < 2) {
+    // Fallback: no structured sections found, render as plain text
+    html += '<div style="white-space:pre-wrap;line-height:2">' + esc(text) + '</div>';
+    return html;
+  }
+
+  // Extract text before first section as direct answer if no explicit direct section
+  if (positions[0].idx > 0) {
+    var before = text.substring(0, positions[0].idx).trim();
+    if (before) html += '<div class="direct-ans">' + esc(before) + '</div>';
+  }
+
+  for (var i = 0; i < positions.length; i++) {
+    var p = positions[i];
+    var start = p.idx + p.len;
+    var end = (i + 1 < positions.length) ? positions[i+1].idx : text.length;
+    var body = text.substring(start, end).trim();
+    if (!body) continue;
+
+    var iconMap = {
+      direct:   '▌',
+      quran:    '📖',
+      hadith:   '📚',
+      scholars: '🕌',
+      misconc:  '⚠️',
+      practical:'✅'
+    };
+    var labelMap = {
+      direct:   'সরাসরি উত্তর',
+      quran:    'কুরআনের আলো',
+      hadith:   'হাদিসের প্রমাণ',
+      scholars: 'বিদ্বানদের ব্যাখ্যা',
+      misconc:  'প্রচলিত ভুল ধারণা',
+      practical:'আমলের নির্দেশনা'
+    };
+
+    if (p.key === 'direct') {
+      html += '<div class="direct-ans">' + esc(body) + '</div>';
+    } else if (p.key === 'misconc') {
+      html += '<div class="rsec"><div class="rsec-head">' + iconMap[p.key] + ' ' + labelMap[p.key] + '</div>' +
+        '<div class="misconception-box">' + esc(body) + '</div></div>';
+    } else if (p.key === 'practical') {
+      html += '<div class="rsec"><div class="rsec-head">' + iconMap[p.key] + ' ' + labelMap[p.key] + '</div>' +
+        '<div class="practical-box">' + esc(body) + '</div></div>';
+    } else {
+      html += '<div class="rsec"><div class="rsec-head">' + iconMap[p.key] + ' ' + labelMap[p.key] + '</div>' +
+        '<div class="rsec-body">' + esc(body) + '</div></div>';
+    }
+  }
+
+  return html;
+}
+
+function appendBotBubble(text, elapsed) {
+  var chat = document.getElementById('chat');
+  var div = document.createElement('div');
+  div.className = 'msg bot';
+  var badge = elapsed ? '<span class="tbadge">⏱ ' + elapsed + 's</span>' : '';
+  div.innerHTML =
+    '<div class="bot-meta"><span class="crescent">' + LOGO_SVG + '</span> Nahida AI' + badge + '</div>' +
+    '<div class="bot-bub">' + parseAndRenderAnswer(text) + '</div>';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
 function showTyping() {
   var chat = document.getElementById('chat');
-  var w = document.getElementById('welcome');
-  if (w) w.remove();
   var div = document.createElement('div');
   div.className = 'msg bot';
-  div.id = 'typing-msg';
+  div.id = 'typ';
   div.innerHTML =
-    '<div class="bot-label">☽ Nahida AI</div>' +
-    '<div class="typing-bubble">' +
+    '<div class="bot-meta"><span class="crescent">' + LOGO_SVG + '</span> Nahida AI</div>' +
+    '<div class="typing-bub">' +
     '<div class="dot"></div><div class="dot"></div><div class="dot"></div>' +
-    '<span class="typing-text" id="typing-text">বিশ্লেষণ করছে…</span>' +
+    '<span class="typing-label" id="tlbl">প্রশ্ন বিশ্লেষণ করছে…</span>' +
     '</div>';
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+  // Cycle labels
+  setTimeout(function() { var t=document.getElementById('tlbl'); if(t) t.textContent='কুরআন ও হাদিস যাচাই করছে…'; }, 1800);
+  setTimeout(function() { var t=document.getElementById('tlbl'); if(t) t.textContent='বিদ্বানদের মতামত সংকলন করছে…'; }, 3500);
+  setTimeout(function() { var t=document.getElementById('tlbl'); if(t) t.textContent='উত্তর তৈরি করছে…'; }, 5500);
+}
 
-  setTimeout(function() {
-    var t = document.getElementById('typing-text');
-    if (t) t.textContent = 'উৎস যাচাই করছে…';
-  }, 1800);
-  setTimeout(function() {
-    var t = document.getElementById('typing-text');
-    if (t) t.textContent = 'উত্তর তৈরি করছে…';
-  }, 3500);
+// ═══════════════════════════════════════════════════════════
+// SEND
+// ═══════════════════════════════════════════════════════════
+function askQuestion(q) {
+  document.getElementById('userinput').value = q;
+  sendMsg();
 }
 
 async function sendMsg() {
@@ -741,54 +964,56 @@ async function sendMsg() {
   var q = inp.value.trim();
   if (!q) return;
 
+  // Ensure we have an active session
+  if (!currentSession) currentSession = newSessionObj();
+
   inp.value = '';
   inp.style.height = 'auto';
+  inp.style.overflowY = 'hidden';
 
-  appendMsg('user', q);
+  removeWelcome();
+  appendUserBubble(q);
   showTyping();
   loading = true;
   document.getElementById('sendbtn').disabled = true;
 
+  // Add user message to session
+  currentSession.messages.push({ role: 'user', content: q });
+
   var t0 = Date.now();
-
   try {
-    var headers = { 'Content-Type': 'application/json' };
-    if (customKey) headers['x-groq-key'] = customKey;
-
     var resp = await fetch('/api/chat', {
       method: 'POST',
-      headers: headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         question: q,
-        conversationHistory: chatHistory.slice(-4)
+        sessionMessages: currentSession.messages.slice(0, -1) // all except current (API adds it)
       })
     });
 
     var data = await resp.json();
-
-    if (!resp.ok) {
-      throw new Error(data.error || 'HTTP ' + resp.status);
-    }
+    if (!resp.ok) throw new Error(data.error || 'HTTP ' + resp.status);
 
     var elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    var typm = document.getElementById('typing-msg');
-    if (typm) typm.remove();
+    document.getElementById('typ') && document.getElementById('typ').remove();
+    appendBotBubble(data.answer, elapsed);
 
-    appendMsg('bot', data.answer, elapsed);
-    chatHistory.push({ q: q, a: data.answer, ts: Date.now() });
-    saveHist();
-    renderHist();
-    updateStat();
+    // Add assistant message to session
+    currentSession.messages.push({ role: 'assistant', content: data.answer });
+    saveCurrentSession();
 
-  } catch (err) {
-    var typm2 = document.getElementById('typing-msg');
-    if (typm2) typm2.remove();
-    appendMsg('bot',
+    // Generate title after first Q&A pair
+    if (currentSession.messages.length === 2) {
+      generateTitle(currentSession);
+    }
+
+  } catch(err) {
+    document.getElementById('typ') && document.getElementById('typ').remove();
+    // Remove failed user message from session
+    currentSession.messages.pop();
+    appendBotBubble(
       '❌ সমস্যা হয়েছে: ' + err.message + '\n\n' +
-      'করণীয়:\n' +
-      '• সেটিং → API Key সঠিক কিনা চেক করুন\n' +
-      '• Vercel Dashboard → Settings → Environment Variables → GROQ_API_KEY আছে কিনা দেখুন\n' +
-      '• তারপর Vercel-এ Redeploy করুন'
+      'করণীয়:\n• Vercel Dashboard → Settings → Environment Variables → GROQ_API_KEY আছে কিনা দেখুন\n• Redeploy করুন'
     );
   }
 
@@ -797,28 +1022,20 @@ async function sendMsg() {
   inp.focus();
 }
 
-// ── Toast
+// ═══════════════════════════════════════════════════════════
+// TOAST / PWA
+// ═══════════════════════════════════════════════════════════
 function toast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('on');
-  setTimeout(function() { t.classList.remove('on'); }, 2500);
+  setTimeout(function() { t.classList.remove('on'); }, 2600);
 }
-
-// ── PWA install
-function showInstallBar() {
-  document.getElementById('install-bar').classList.add('on');
-}
-function hideInstallBar() {
-  document.getElementById('install-bar').classList.remove('on');
-}
+function showIBar() { document.getElementById('ibar').classList.add('on'); }
 function doInstall() {
   if (!deferredInstall) return;
   deferredInstall.prompt();
-  deferredInstall.userChoice.then(function() {
-    deferredInstall = null;
-    hideInstallBar();
-  });
+  deferredInstall.userChoice.then(function() { deferredInstall = null; document.getElementById('ibar').classList.remove('on'); });
 }
 </script>
 </body>
